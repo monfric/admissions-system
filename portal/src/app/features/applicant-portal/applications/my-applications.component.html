@@ -1,0 +1,130 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">My Applications</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/applicant/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item active">My Applications</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">All My Applications</h3>
+          <div class="card-tools">
+            <a routerLink="/applicant/apply" class="btn btn-primary btn-sm">
+              <i class="fas fa-plus"></i> Apply for a Course
+            </a>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Application No.</th>
+                  <th>Intake</th>
+                  <th>Training Level</th>
+                  <th>Residence</th>
+                  <th>Admission No.</th>
+                  <th>Programme(s)</th>
+                  <th>Fee (KES)</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Applied On</th>
+                  <th style="width: 70px" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="12" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Loading your applications&hellip;
+                  </td>
+                </tr>
+                <tr *ngIf="!loading && !errorMessage && applications.length === 0">
+                  <td colspan="12" class="text-center py-4 text-muted">
+                    You haven't applied for a course yet.
+                    <a routerLink="/applicant/apply">Apply now</a>.
+                  </td>
+                </tr>
+                <tr *ngFor="let app of applications; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td><b>{{ app.application_number }}</b></td>
+                  <td>{{ app.intake_name }}</td>
+                  <td>{{ app.training_level_name }}</td>
+                  <td>{{ app.residence || '—' }}</td>
+                  <td>
+                    <span class="admission-no" *ngIf="app.admission; else noAdmission">{{ app.admission.admission_number }}</span>
+                    <ng-template #noAdmission><span class="text-muted">&mdash;</span></ng-template>
+                  </td>
+                  <td>
+                    <div class="programme-status-row" *ngFor="let p of app.programmes">
+                      <span class="programme-status-name">
+                        <span class="choice-tag" *ngIf="choiceLabel(p.choice)">{{ choiceLabel(p.choice) }}</span>
+                        {{ p.programme_name }}
+                      </span>
+                      <span class="status-pill" [ngClass]="'status-' + programmeStatus(app, p)">
+                        {{ decisionDisplay(programmeStatus(app, p)).label }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ app.application_fee | number:'1.2-2' }}</td>
+                  <td>
+                    <span class="status-pill" [ngClass]="'status-' + app.payment_status">
+                      {{ app.payment_status === 'paid' ? 'Paid' : 'Unpaid' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-pill" [ngClass]="'status-' + applicationStatus(app)">
+                      <i class="fas" [ngClass]="decisionDisplay(applicationStatus(app)).icon"></i>
+                      {{ decisionDisplay(applicationStatus(app)).label }}
+                    </span>
+                    <div class="mt-1" *ngIf="app.days_remaining != null">
+                      <span class="countdown-pill" [ngClass]="'countdown-' + countdownDisplay(app.days_remaining).level">
+                        <i class="fas fa-stopwatch"></i>{{ countdownDisplay(app.days_remaining).text }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ app.created_at | date:'MMM d, y' }}</td>
+                  <td class="text-center position-relative" (click)="$event.stopPropagation()">
+                    <button class="btn btn-sm btn-tool" (click)="toggleMenu(app.id, $event)">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right show position-absolute"
+                         *ngIf="openMenuId === app.id"
+                         style="top:100%;right:0;z-index:1050;min-width:200px">
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="view(app)">
+                        <i class="fas fa-eye mr-2 text-info"></i> View
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" *ngFor="let letter of app.letters"
+                         (click)="downloadLetter(app, letter)">
+                        <i class="fas fa-file-download mr-2" [ngClass]="letter.type === 'admission' ? 'text-success' : 'text-primary'"></i>
+                        {{ letter.title }}
+                      </a>
+                      <a class="dropdown-item" *ngIf="app.uniform_status" [routerLink]="['/applicant/applications', app.id, 'uniform']">
+                        <i class="fas fa-ruler mr-2 text-warning"></i> Uniform Measurements
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

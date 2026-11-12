@@ -1,0 +1,81 @@
+$primary: #2563eb;
+$text: #111827;
+$text-muted: #6b7280;
+$border: #e5e7eb;
+
+.welcome-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #fff 70%);
+}
+
+.welcome-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.welcome-title { font-size: 1.2rem; font-weight: 700; color: $text; margin: 0 0 4px; }
+.welcome-text { font-size: .88rem; color: $text-muted; margin: 0; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+
+  &.icon-total    { background: #eff6ff; color: $primary; }
+  &.icon-pending  { background: #fffbeb; color: #d97706; }
+  &.icon-notified { background: #e0f2fe; color: #0369a1; }
+  &.icon-approved { background: #f0fdf4; color: #16a34a; }
+}
+
+.stat-value { font-size: 1.4rem; font-weight: 800; color: $text; line-height: 1.1; }
+.stat-label { font-size: .78rem; font-weight: 600; color: $text-muted; }
+
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border-bottom: 1px solid $border;
+  color: inherit;
+  text-decoration: none;
+  transition: background .15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f8fafc; text-decoration: none; color: inherit; }
+}
+
+.recent-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.recent-title { font-size: .9rem; font-weight: 700; color: $text; }
+.recent-meta { font-size: .78rem; color: $text-muted; }
+.recent-arrow { color: #9ca3af; font-size: .8rem; }
+
+.admission-no {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  letter-spacing: .5px;
+}

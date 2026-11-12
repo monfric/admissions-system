@@ -1,0 +1,38 @@
+
+<div class="confirm-dialog" [class]="'confirm-dialog-' + data.type">
+  <!-- Dialog Content -->
+  <div mat-dialog-content class="dialog-content">
+    <!-- Icon -->
+    <div class="dialog-icon" [class]="iconColorClass">
+      <mat-icon>{{ dialogIcon }}</mat-icon>
+    </div>
+
+    <!-- Title -->
+    <h2 class="dialog-title">{{ data.title }}</h2>
+
+    <!-- Message -->
+  
+      <!-- {{ data.message }} -->
+      <div [innerHTML]="data.message"></div>
+ 
+  </div>
+
+  <!-- Dialog Actions -->
+  <div mat-dialog-actions class="dialog-actions">
+    <button 
+      mat-stroked-button 
+      (click)="onCancel()"
+      *ngIf="data.showCancelButton"
+      class="btn-cancel">
+      {{ data.cancelText }}
+    </button>
+    
+    <button 
+      mat-raised-button 
+      [color]="confirmButtonColor"
+      (click)="onConfirm()"
+      class="btn-confirm">
+      {{ data.confirmText }}
+    </button>
+  </div>
+</div>

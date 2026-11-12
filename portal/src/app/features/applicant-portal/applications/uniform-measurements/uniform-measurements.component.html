@@ -1,0 +1,177 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Uniform Measurements</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/applicant/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a routerLink="/applicant/applications">My Applications</a></li>
+            <li class="breadcrumb-item"><a [routerLink]="['/applicant/applications', applicationId]">Application</a></li>
+            <li class="breadcrumb-item active">Uniform Measurements</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div *ngIf="loading" class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading your uniform measurement form&hellip;
+      </div>
+
+      <div class="portal-card" *ngIf="!loading && !form">
+        <div class="empty-state">
+          <div class="empty-icon"><i class="fas fa-ruler"></i></div>
+          <div class="empty-title">{{ loadError }}</div>
+          <a [routerLink]="['/applicant/applications', applicationId]" class="btn-portal-outline mt-2"><i class="fas fa-arrow-left"></i>Back to Application</a>
+        </div>
+      </div>
+
+      <ng-container *ngIf="form as f">
+
+        <!-- Status banner -->
+        <div class="portal-banner banner-success" *ngIf="f.measurement && !f.editable">
+          <i class="fas fa-check-circle"></i>
+          <div class="banner-text">
+            <span class="banner-title">Measurements submitted on {{ f.measurement.submitted_at | date:'d MMM y' }}</span>
+            Thank you. Your documents are available on your application page.
+            To change anything, please contact the admissions office.
+          </div>
+        </div>
+        <div class="portal-banner banner-warning" *ngIf="f.measurement && f.editable">
+          <i class="fas fa-lock-open"></i>
+          <div class="banner-text">
+            <span class="banner-title">Your form has been reopened for corrections</span>
+            The admissions office unlocked your measurements. Update them and submit again.
+          </div>
+        </div>
+        <div class="portal-banner banner-info" *ngIf="!f.measurement">
+          <i class="fas fa-info-circle"></i>
+          <div class="banner-text">
+            <span class="banner-title">Uniform Measurement Notice</span>
+            All measurements are compulsory and must be taken by a <b>qualified tailor</b> to ensure accuracy and proper fitting.
+            Fill in every measurement in <b>inches</b>. Your documents become available once you submit this form.
+          </div>
+        </div>
+
+        <!-- Student -->
+        <div class="portal-card">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-user-graduate"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Student Details</h3>
+              <p class="portal-card-subtitle">Students Uniform Measurement Collection Tool</p>
+            </div>
+            <button type="button" class="btn-portal-outline" *ngIf="f.measurement && !f.editable" (click)="viewPdf()">
+              <i class="fas fa-file-pdf"></i>View / Print PDF
+            </button>
+          </div>
+          <div class="portal-card-body">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div class="detail-value">{{ f.full_name }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Admission No.</div>
+                <div class="detail-value">{{ f.admission_number }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Class</div>
+                <div class="detail-value">{{ f.programme_name }} &middot; {{ f.intake_name }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Uniform</div>
+                <div class="detail-value" *ngIf="!canChooseSet">{{ activeSet?.label || '—' }} <span class="unit-note">(inches)</span></div>
+                <select class="form-control form-control-sm set-select" *ngIf="canChooseSet" [(ngModel)]="uniformSet"
+                        [class.is-invalid]="attempted && !uniformSet">
+                  <option value="">Choose…</option>
+                  <option *ngFor="let s of allowedSets" [value]="s.key">{{ s.label }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Measurements -->
+        <div class="portal-card" *ngIf="activeSet as set">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-ruler"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">{{ set.label }} Uniform Measurements</h3>
+              <p class="portal-card-subtitle">All measurements in inches</p>
+            </div>
+            <span class="progress-pill" *ngIf="f.editable" [class.progress-done]="progress.done === progress.total">
+              {{ progress.done }} of {{ progress.total }} filled
+            </span>
+          </div>
+          <div class="portal-card-body">
+            <div class="garment-grid">
+              <div class="garment-card" *ngFor="let g of set.garments">
+                <div class="garment-head">
+                  <span>{{ g.name }}</span>
+                  <span class="garment-unit">Inches</span>
+                </div>
+
+                <div class="measure-row" *ngFor="let field of g.fields">
+                  <label class="measure-label" [attr.for]="'m-' + field.key">{{ field.label }}</label>
+                  <ng-container *ngIf="f.editable; else readOnly">
+                    <div class="measure-input" [class.is-invalid]="!!fieldError(field.key)">
+                      <input type="number" inputmode="decimal" [id]="'m-' + field.key"
+                             [min]="minInches" [max]="maxInches" step="0.25" placeholder="0"
+                             [(ngModel)]="values[field.key]">
+                      <span class="suffix">in</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #readOnly>
+                    <span class="measure-value">{{ values[field.key] ?? '—' }} <small>in</small></span>
+                  </ng-template>
+                  <span class="measure-error" *ngIf="f.editable && fieldError(field.key)">{{ fieldError(field.key) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <label class="tailor-confirm" *ngIf="f.editable" [class.is-invalid]="attempted && !tailorConfirmed">
+              <input type="checkbox" [(ngModel)]="tailorConfirmed">
+              <span>I confirm that these measurements were taken by a qualified tailor.</span>
+            </label>
+            <div class="tailor-confirm confirmed" *ngIf="!f.editable && f.measurement?.tailor_confirmed">
+              <i class="fas fa-check-circle"></i>
+              <span>Confirmed as taken by a qualified tailor.</span>
+            </div>
+          </div>
+
+          <div class="error-banner" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ errorMessage }}</span>
+            <button class="error-dismiss" type="button" (click)="errorMessage = ''"><i class="fas fa-times"></i></button>
+          </div>
+
+          <div class="portal-card-foot">
+            <a [routerLink]="['/applicant/applications', applicationId]" class="btn-portal-outline"><i class="fas fa-arrow-left"></i>Back to Application</a>
+            <span class="foot-spacer"></span>
+            <button type="button" class="btn-portal" *ngIf="f.editable" (click)="submit()" [disabled]="submitting">
+              <i class="fas" [ngClass]="submitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+              {{ submitting ? 'Submitting…' : 'Submit Measurements' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Gender "Other": nothing to show until a set is chosen -->
+        <div class="portal-card" *ngIf="!activeSet">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-tshirt"></i></div>
+            <div class="empty-title">Choose your uniform</div>
+            <div class="empty-text">Select Gents or Ladies under Student Details to see the measurements to fill in.</div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </section>
+</div>

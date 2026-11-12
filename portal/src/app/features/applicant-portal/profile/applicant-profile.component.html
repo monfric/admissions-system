@@ -1,0 +1,190 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">My Profile</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item">Applicant Portal</li>
+            <li class="breadcrumb-item active">My Profile</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div *ngIf="loading" class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading your profile&hellip;
+      </div>
+
+      <div class="alert alert-danger" *ngIf="!loading && !profile && errorMessage">{{ errorMessage }}</div>
+
+      <div class="profile-layout" *ngIf="profile as p">
+
+        <!-- ===== PROFILE CARD ===== -->
+        <aside class="profile-aside">
+          <div class="portal-card profile-card">
+            <div class="profile-identity">
+              <div class="profile-avatar">
+                <img *ngIf="photoUrl" [src]="photoUrl" alt="Profile photo">
+                <span *ngIf="!photoUrl">{{ initials }}</span>
+              </div>
+              <h2 class="profile-name">{{ p.full_name }}</h2>
+              <span class="locked-badge"><i class="fas fa-lock"></i>Profile submitted</span>
+            </div>
+
+            <ul class="contact-list">
+              <li><i class="fas fa-envelope"></i><span>{{ p.email }}</span></li>
+              <li><i class="fas fa-phone"></i><span>{{ p.phone_number }}</span></li>
+              <li><i class="fas fa-id-badge"></i><span>ID {{ p.id_number }}</span></li>
+              <li><i class="fas fa-calendar-alt"></i><span>Joined {{ p.created_at | date:'d MMM y' }}</span></li>
+            </ul>
+
+            <nav class="jump-nav">
+              <div class="jump-title">Jump to</div>
+              <button type="button" class="jump-link" *ngFor="let s of sections" (click)="scrollTo(s.id)">
+                <i class="fas" [ngClass]="s.icon"></i>{{ s.label }}
+              </button>
+            </nav>
+          </div>
+        </aside>
+
+        <!-- ===== SECTIONS ===== -->
+        <div class="profile-main">
+
+          <div class="portal-card" id="profile-personal">
+            <div class="portal-card-head">
+              <div class="head-icon"><i class="fas fa-user"></i></div>
+              <div class="head-text"><h3 class="portal-card-title">Personal Details</h3></div>
+            </div>
+            <div class="portal-card-body detail-grid">
+              <div class="detail-item"><div class="detail-label">First Name</div><div class="detail-value">{{ p.first_name }}</div></div>
+              <div class="detail-item"><div class="detail-label">Middle Name</div><div class="detail-value">{{ p.middle_name || '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">Last Name</div><div class="detail-value">{{ p.last_name }}</div></div>
+              <div class="detail-item"><div class="detail-label">Date of Birth</div><div class="detail-value">{{ p.date_of_birth ? (p.date_of_birth | date:'d MMM y') : '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">Gender</div><div class="detail-value">{{ p.gender || '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">ID Number</div><div class="detail-value">{{ p.id_number }}</div></div>
+              <div class="detail-item"><div class="detail-label">Phone Number</div><div class="detail-value">{{ p.phone_number }}</div></div>
+              <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value text-break">{{ p.email }}</div></div>
+            </div>
+          </div>
+
+          <div class="portal-card" id="profile-location">
+            <div class="portal-card-head">
+              <div class="head-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div class="head-text"><h3 class="portal-card-title">Location &amp; Background</h3></div>
+            </div>
+            <div class="portal-card-body detail-grid">
+              <div class="detail-item"><div class="detail-label">County</div><div class="detail-value">{{ p.county || '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">Sub-County</div><div class="detail-value">{{ p.sub_county || '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">Denomination</div><div class="detail-value">{{ p.denomination || '—' }}</div></div>
+              <div class="detail-item"><div class="detail-label">Disability</div><div class="detail-value">{{ p.has_disability ? 'Yes' : 'No' }}</div></div>
+              <div class="detail-item" *ngIf="p.has_disability"><div class="detail-label">Disability Details</div><div class="detail-value">{{ p.disability_details || '—' }}</div></div>
+            </div>
+          </div>
+
+          <div class="portal-card" id="profile-guardian">
+            <div class="portal-card-head">
+              <div class="head-icon"><i class="fas fa-users"></i></div>
+              <div class="head-text"><h3 class="portal-card-title">Guardian &amp; Sponsor</h3></div>
+            </div>
+            <div class="portal-card-body">
+              <div class="sub-heading">Guardian</div>
+              <div class="detail-grid">
+                <div class="detail-item"><div class="detail-label">Name</div><div class="detail-value">{{ p.guardian_name || '—' }}</div></div>
+                <div class="detail-item"><div class="detail-label">Relationship</div><div class="detail-value">{{ p.relationship || '—' }}</div></div>
+                <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">{{ p.guardian_contact || '—' }}</div></div>
+              </div>
+              <div class="sub-heading mt-3">Sponsor</div>
+              <div class="detail-grid" *ngIf="p.sponsor_name || p.sponsor_contact; else noSponsor">
+                <div class="detail-item"><div class="detail-label">Name</div><div class="detail-value">{{ p.sponsor_name || '—' }}</div></div>
+                <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">{{ p.sponsor_contact || '—' }}</div></div>
+              </div>
+              <ng-template #noSponsor><div class="text-muted small">No sponsor given.</div></ng-template>
+            </div>
+          </div>
+
+          <div class="portal-card" id="profile-education">
+            <div class="portal-card-head">
+              <div class="head-icon"><i class="fas fa-graduation-cap"></i></div>
+              <div class="head-text"><h3 class="portal-card-title">Education</h3></div>
+            </div>
+            <div class="portal-card-body">
+              <div class="sub-heading">KCSE / Secondary School</div>
+              <div class="detail-grid">
+                <div class="detail-item"><div class="detail-label">Secondary School</div><div class="detail-value">{{ p.secondary_school || '—' }}</div></div>
+                <div class="detail-item"><div class="detail-label">Index Number</div><div class="detail-value">{{ p.index_number || '—' }}</div></div>
+                <div class="detail-item"><div class="detail-label">KCSE Year</div><div class="detail-value">{{ p.kcse_year || '—' }}</div></div>
+                <div class="detail-item">
+                  <div class="detail-label">Aggregate</div>
+                  <div class="detail-value"><span class="grade-chip grade-chip-lg">{{ p.aggregate || '—' }}</span></div>
+                </div>
+              </div>
+
+              <div class="sub-heading mt-3">Subject Grades</div>
+              <div class="grade-grid">
+                <div class="grade-cell" *ngFor="let g of grades">
+                  <span class="grade-subject">{{ g.subject }}</span>
+                  <span class="grade-chip">{{ g.grade || '—' }}</span>
+                </div>
+              </div>
+
+              <ng-container *ngIf="p.college_grade || p.graduation_year">
+                <div class="sub-heading mt-3">College / Tertiary</div>
+                <div class="detail-grid">
+                  <div class="detail-item"><div class="detail-label">College Grade</div><div class="detail-value">{{ p.college_grade || '—' }}</div></div>
+                  <div class="detail-item"><div class="detail-label">Graduation Year</div><div class="detail-value">{{ p.graduation_year || '—' }}</div></div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <div class="portal-card" id="profile-documents">
+            <div class="portal-card-head">
+              <div class="head-icon"><i class="fas fa-paperclip"></i></div>
+              <div class="head-text">
+                <h3 class="portal-card-title">Documents</h3>
+                <p class="portal-card-subtitle">
+                  <i class="fas fa-lock mr-1"></i>Your details are locked after submission. Only documents can be updated.
+                </p>
+              </div>
+            </div>
+            <div class="portal-card-body doc-grid">
+              <div class="doc-tile" *ngFor="let d of documents" [class.doc-missing]="!existingFile(d.type)">
+                <div class="doc-top">
+                  <div class="doc-icon"><i class="fas" [ngClass]="d.icon"></i></div>
+                  <div class="doc-info">
+                    <div class="doc-label">{{ d.label }} <span class="doc-optional" *ngIf="!d.required">Optional</span></div>
+                    <div class="doc-file" *ngIf="existingFile(d.type) as f"><i class="fas fa-check-circle"></i>{{ f.fileName }}</div>
+                    <div class="doc-file doc-file-none" *ngIf="!existingFile(d.type)">Not uploaded</div>
+                  </div>
+                </div>
+                <div class="doc-actions">
+                  <span class="doc-uploading" *ngIf="d.uploading"><i class="fas fa-spinner fa-spin"></i>Uploading&hellip;</span>
+                  <ng-container *ngIf="!d.uploading">
+                    <button type="button" class="doc-btn" *ngIf="existingFile(d.type)" (click)="viewDocument(d)">
+                      <i class="fas fa-eye"></i>View
+                    </button>
+                    <label class="doc-btn doc-btn-primary" [attr.for]="'profileDoc_' + d.type">
+                      <i class="fas" [ngClass]="existingFile(d.type) ? 'fa-sync-alt' : 'fa-upload'"></i>{{ existingFile(d.type) ? 'Replace' : 'Upload' }}
+                    </label>
+                  </ng-container>
+                  <input [id]="'profileDoc_' + d.type" type="file" [accept]="d.accept" hidden (change)="onFileSelected($event, d)">
+                </div>
+                <small class="doc-hint">{{ d.type === 'profile' ? 'JPEG or PNG' : 'JPEG, PNG or PDF' }} &middot; max 2 MB</small>
+                <small class="doc-error" *ngIf="d.error">{{ d.error }}</small>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>

@@ -1,0 +1,49 @@
+<div class="tab-pane">
+  <div class="form-section-title">
+    <i class="fas fa-camera mr-2 text-primary"></i>Profile Picture
+  </div>
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <div class="file-upload-box">
+        <div class="file-preview" *ngIf="photoUrl">
+          <img [src]="photoUrl" alt="Profile preview">
+        </div>
+        <div class="file-upload-info">
+          <label class="btn-upload" for="portalPhotoInput" *ngIf="!photo.uploading">
+            <i class="fas fa-upload mr-1"></i>{{ existingFile('profile') ? 'Replace Photo' : 'Upload Photo' }}
+          </label>
+          <span class="btn-uploading" *ngIf="photo.uploading"><i class="fas fa-spinner fa-spin mr-1"></i>Uploading&hellip;</span>
+          <input id="portalPhotoInput" type="file" accept="image/jpeg,image/png" hidden
+                 (change)="onFileSelected($event, photo)">
+          <span class="file-name" *ngIf="existingFile('profile') as f">Current: {{ f.fileName }}</span>
+          <small class="text-muted d-block mt-1">JPEG or PNG - Max 2 MB <span class="text-danger">*</span></small>
+          <small class="text-danger d-block" *ngIf="photo.error">{{ photo.error }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-paperclip mr-2 text-primary"></i>Supporting Documents
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3" *ngFor="let slot of documents">
+      <label class="form-label" [class.req]="slot.required">{{ slot.label }}</label>
+      <div class="file-upload-box file-upload-box-compact">
+        <label class="btn-upload" [attr.for]="'portalDoc_' + slot.type" *ngIf="!slot.uploading">
+          <i class="fas fa-upload mr-1"></i>{{ existingFile(slot.type) ? 'Replace File' : 'Upload File' }}
+        </label>
+        <span class="btn-uploading" *ngIf="slot.uploading"><i class="fas fa-spinner fa-spin mr-1"></i>Uploading&hellip;</span>
+        <input [id]="'portalDoc_' + slot.type" type="file" accept="image/jpeg,image/png,application/pdf" hidden
+               (change)="onFileSelected($event, slot)">
+        <span class="file-name" *ngIf="existingFile(slot.type) as f">Current: {{ f.fileName }}</span>
+        <span class="file-name text-muted" *ngIf="!existingFile(slot.type) && !slot.uploading">No file uploaded</span>
+        <button type="button" class="btn-view-file" *ngIf="existingFile(slot.type)" (click)="viewDocument(slot)" title="View">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <small class="text-muted d-block mt-1">JPEG, PNG or PDF - Max 2MB</small>
+      <small class="text-danger d-block" *ngIf="slot.error">{{ slot.error }}</small>
+    </div>
+  </div>
+</div>

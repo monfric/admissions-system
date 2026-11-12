@@ -1,0 +1,120 @@
+<div class="tab-pane" [formGroup]="form">
+  <div class="form-section-title">
+    <i class="fas fa-school mr-2 text-primary"></i>KCSE / Secondary School
+  </div>
+  <div class="row">
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label req">Secondary School</label>
+      <input type="text" class="form-control" formControlName="secondary_school"
+             placeholder="e.g. Meru School" [class.is-invalid]="fieldError('secondary_school')">
+      <div class="invalid-feedback" *ngIf="fieldError('secondary_school')">{{ fieldError('secondary_school') }}</div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label req">Index Number</label>
+      <input type="text" class="form-control" formControlName="index_number"
+             placeholder="12345678" [class.is-invalid]="fieldError('index_number')">
+      <div class="invalid-feedback" *ngIf="fieldError('index_number')">{{ fieldError('index_number') }}</div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label req">KCSE Year</label>
+      <select class="form-control" formControlName="kcse_year" [class.is-invalid]="fieldError('kcse_year')">
+        <option *ngFor="let y of options.years" [ngValue]="y">{{ y }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('kcse_year')">{{ fieldError('kcse_year') }}</div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label req">Aggregate</label>
+      <select class="form-control" formControlName="aggregate" [class.is-invalid]="fieldError('aggregate')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.kcseGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('aggregate')">{{ fieldError('aggregate') }}</div>
+    </div>
+
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-book mr-2 text-primary"></i>Subject Grades
+  </div>
+  <div class="row">
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">English</label>
+      <select class="form-control" formControlName="english_grade" [class.is-invalid]="fieldError('english_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('english_grade')">{{ fieldError('english_grade') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Kiswahili</label>
+      <select class="form-control" formControlName="kiswahili_grade" [class.is-invalid]="fieldError('kiswahili_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('kiswahili_grade')">{{ fieldError('kiswahili_grade') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Biology</label>
+      <select class="form-control" formControlName="biology_grade" [class.is-invalid]="fieldError('biology_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('biology_grade')">{{ fieldError('biology_grade') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Mathematics</label>
+      <select class="form-control" formControlName="maths_grade" [class.is-invalid]="fieldError('maths_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('maths_grade')">{{ fieldError('maths_grade') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Chemistry</label>
+      <select class="form-control" formControlName="chemistry_grade" [class.is-invalid]="fieldError('chemistry_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('chemistry_grade')">{{ fieldError('chemistry_grade') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Physics</label>
+      <select class="form-control" formControlName="physics_grade" [class.is-invalid]="fieldError('physics_grade')">
+        <option value="">— Grade —</option>
+        <option *ngFor="let g of options.subjectGrades" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('physics_grade')">{{ fieldError('physics_grade') }}</div>
+    </div>
+
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-university mr-2 text-primary"></i>College / Tertiary (If Applicable)
+  </div>
+  <div class="row">
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">College Grade</label>
+      <input type="text" class="form-control" formControlName="college_grade" placeholder="e.g. Diploma - Credit">
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Graduation Year</label>
+      <select class="form-control" formControlName="graduation_year">
+        <option [ngValue]="null">— Select Year —</option>
+        <option *ngFor="let y of options.years" [ngValue]="y">{{ y }}</option>
+      </select>
+    </div>
+
+  </div>
+</div>

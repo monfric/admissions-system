@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMTC:: Applicant Registration</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <img src="assets/dist/img/logo.png" style="height:80px;">
+                </div>
+
+                <h2 style="color: #003361;">NMTC Portal</h2>
+                <p class="text-muted mb-0">Create Your Applicant Account</p>
+            </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                <div class="row g-2">
+                    <div class="col-sm-6 mb-2">
+                        <div class="input-group">
+                            <input type="text" formControlName="first_name" placeholder="First Name" class="form-control">
+                            <div class="input-group-text"><span class="fas fa-user"></span></div>
+                        </div>
+                        <div *ngIf="invalid('first_name')" class="error">First name is required</div>
+                    </div>
+                    <div class="col-sm-6 mb-2">
+                        <div class="input-group">
+                            <input type="text" formControlName="last_name" placeholder="Last Name" class="form-control">
+                            <div class="input-group-text"><span class="fas fa-user"></span></div>
+                        </div>
+                        <div *ngIf="invalid('last_name')" class="error">Last name is required</div>
+                    </div>
+                </div>
+
+                <div class="input-group mt-1">
+                    <input type="email" formControlName="email" placeholder="Email" class="form-control">
+                    <div class="input-group-text"><span class="fas fa-envelope"></span></div>
+                </div>
+                <div *ngIf="invalid('email')" class="error">Valid email is required</div>
+
+                <div class="input-group mt-3">
+                    <input type="tel" appDigitsOnly formControlName="phone_number" placeholder="Phone Number (e.g. 0712345678)" class="form-control">
+                    <div class="input-group-text"><span class="fas fa-phone"></span></div>
+                </div>
+                <div *ngIf="invalid('phone_number')" class="error">Valid phone number is required</div>
+
+                <div class="input-group mt-3">
+                    <input type="text" formControlName="id_number" placeholder="National ID / Birth Cert. Number" class="form-control">
+                    <div class="input-group-text"><span class="fas fa-id-card"></span></div>
+                </div>
+                <div *ngIf="invalid('id_number')" class="error">ID number is required</div>
+
+                <div class="input-group mt-3">
+                    <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password (min. 8 characters)" class="form-control" autocomplete="new-password">
+                    <button type="button" class="input-group-text password-toggle" (click)="showPassword = !showPassword"
+                            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword"
+                            [title]="showPassword ? 'Hide password' : 'Show password'">
+                        <span class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></span>
+                    </button>
+                </div>
+                <div *ngIf="invalid('password')" class="error">Password must be at least 8 characters</div>
+
+                <div class="input-group mt-3">
+                    <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm Password" class="form-control" autocomplete="new-password">
+                    <button type="button" class="input-group-text password-toggle" (click)="showConfirmPassword = !showConfirmPassword"
+                            [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showConfirmPassword"
+                            [title]="showConfirmPassword ? 'Hide password' : 'Show password'">
+                        <span class="fas" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></span>
+                    </button>
+                </div>
+                <div *ngIf="passwordMismatch" class="error">Passwords do not match</div>
+
+                <div *ngIf="errorMessage" class="error-message mt-3">{{ errorMessage }}</div>
+
+                <button *ngIf="!isLoading" type="submit" class="btn btn-login btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+                <div class="loading-part mt-3">
+                <span *ngIf="isLoading">
+                  <div class="spinner-grow text-success"></div>
+                  <div class="spinner-grow text-secondary"></div>
+                  <div class="spinner-grow text-warning"></div>
+                </span>
+                </div>
+            </form>
+
+            <div class="register-link">
+                Already have an account? <a routerLink="/applicant/login" class="text-center">Login</a>
+            </div>
+
+            <br>
+        <h6 style="width: 100%;text-align: center;">Copyright &copy; 2026 <a style="color: #b3021c;" href="https://nmtc.ac.ke" target="_blank">NMTC</a>. All rights reserved.</h6>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

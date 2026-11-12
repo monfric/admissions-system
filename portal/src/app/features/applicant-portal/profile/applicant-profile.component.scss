@@ -1,0 +1,272 @@
+// My Profile: a profile card on the left (sticky on wide screens) and the
+// read-only detail sections on the right; documents stay replaceable.
+
+$primary: #2563eb;
+$primary-soft: #eff6ff;
+$success: #16a34a;
+$danger: #dc2626;
+$text: #111827;
+$text-body: #374151;
+$text-muted: #6b7280;
+$border: #e5e7eb;
+$surface: #f8fafc;
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.profile-aside {
+  position: sticky;
+  top: 16px;
+}
+
+// ─── Profile card ─────────────────────────────────────────────────────────────
+.profile-card { margin-bottom: 0; }
+
+.profile-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 26px 20px 18px;
+  background: linear-gradient(180deg, $primary-soft 0%, #fff 100%);
+}
+
+.profile-avatar {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .2);
+  background: $primary;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.profile-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 8px;
+}
+
+.locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  color: #15803d;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: .74rem;
+  font-weight: 700;
+}
+
+.contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid $border;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .84rem;
+    color: $text-body;
+    padding: 5px 0;
+
+    i { width: 16px; text-align: center; color: $text-muted; }
+    span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+}
+
+.jump-nav {
+  padding: 12px 12px 14px;
+  border-top: 1px solid $border;
+}
+
+.jump-title {
+  font-size: .7rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 0 8px 6px;
+}
+
+.jump-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: .84rem;
+  font-weight: 600;
+  color: $text-body;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+
+  i { width: 16px; text-align: center; color: $text-muted; }
+  &:hover { background: $primary-soft; color: $primary; i { color: $primary; } }
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+.profile-main .portal-card { scroll-margin-top: 16px; }
+
+.sub-heading {
+  font-size: .76rem;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+
+.grade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.grade-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: $surface;
+}
+
+.grade-subject { font-size: .84rem; font-weight: 600; color: $text-body; }
+
+.grade-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  border-radius: 8px;
+  padding: 2px 8px;
+  background: $primary-soft;
+  color: $primary;
+  font-size: .82rem;
+  font-weight: 800;
+
+  &.grade-chip-lg { font-size: .95rem; padding: 3px 12px; }
+}
+
+// ─── Documents ────────────────────────────────────────────────────────────────
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.doc-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+
+  &.doc-missing {
+    border-style: dashed;
+    background: $surface;
+    .doc-icon { background: #f3f4f6; color: #9ca3af; }
+  }
+}
+
+.doc-top { display: flex; align-items: flex-start; gap: 12px; }
+
+.doc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: $primary-soft;
+  color: $primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-info { min-width: 0; flex: 1; }
+.doc-label { font-size: .86rem; font-weight: 700; color: $text; }
+
+.doc-optional {
+  font-size: .68rem;
+  font-weight: 600;
+  color: $text-muted;
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 4px;
+}
+
+.doc-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  color: #15803d;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.doc-file-none { color: $text-muted; }
+}
+
+.doc-actions { display: flex; align-items: center; gap: 8px; }
+
+.doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: $text-body;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  &:hover { background: $primary-soft; border-color: #93c5fd; color: $primary; }
+
+  &.doc-btn-primary {
+    border-color: $primary;
+    color: $primary;
+  }
+}
+
+.doc-uploading { font-size: .8rem; color: $primary; display: inline-flex; align-items: center; gap: 6px; }
+.doc-hint { font-size: .72rem; color: #9ca3af; }
+.doc-error { font-size: .76rem; color: $danger; }
+
+// ─── Small screens ────────────────────────────────────────────────────────────
+@media (max-width: 991.98px) {
+  .profile-layout { grid-template-columns: minmax(0, 1fr); }
+  .profile-aside { position: static; }
+  .jump-nav { display: none; }
+}

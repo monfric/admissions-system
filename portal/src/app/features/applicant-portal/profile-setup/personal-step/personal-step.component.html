@@ -1,0 +1,57 @@
+<div class="tab-pane" [formGroup]="form">
+  <div class="form-section-title">
+    <i class="fas fa-id-card mr-2 text-primary"></i>Basic Information
+  </div>
+  <div class="row">
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">First Name</label>
+      <input type="text" class="form-control" formControlName="first_name"
+             placeholder="John" [class.is-invalid]="fieldError('first_name')">
+      <div class="invalid-feedback" *ngIf="fieldError('first_name')">{{ fieldError('first_name') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Middle Name</label>
+      <input type="text" class="form-control" formControlName="middle_name" placeholder="Middle name">
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Last Name</label>
+      <input type="text" class="form-control" formControlName="last_name"
+             placeholder="Doe" [class.is-invalid]="fieldError('last_name')">
+      <div class="invalid-feedback" *ngIf="fieldError('last_name')">{{ fieldError('last_name') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Phone Number</label>
+      <input type="tel" appDigitsOnly class="form-control" formControlName="phone_number"
+             placeholder="0712345678" [class.is-invalid]="fieldError('phone_number')">
+      <div class="invalid-feedback" *ngIf="fieldError('phone_number')">{{ fieldError('phone_number') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">ID Number</label>
+      <input type="text" class="form-control" formControlName="id_number"
+             placeholder="12345678" [class.is-invalid]="fieldError('id_number')">
+      <div class="invalid-feedback" *ngIf="fieldError('id_number')">{{ fieldError('id_number') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Date of Birth</label>
+      <input type="date" class="form-control" formControlName="date_of_birth"
+             [class.is-invalid]="fieldError('date_of_birth')">
+      <div class="invalid-feedback" *ngIf="fieldError('date_of_birth')">{{ fieldError('date_of_birth') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Gender</label>
+      <select class="form-control" formControlName="gender" [class.is-invalid]="fieldError('gender')">
+        <option value="">— Select Gender —</option>
+        <option *ngFor="let g of options.genders" [value]="g">{{ g }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('gender')">{{ fieldError('gender') }}</div>
+    </div>
+
+  </div>
+</div>

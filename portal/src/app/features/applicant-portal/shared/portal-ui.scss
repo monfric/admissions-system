@@ -1,0 +1,239 @@
+// Shared look for applicant-portal pages (dashboard, apply, application
+// details) — the same cards and colours as the profile setup wizard.
+
+$primary: #2563eb;
+$primary-dark: #1d4ed8;
+$primary-soft: #eff6ff;
+$success: #16a34a;
+$warning: #d97706;
+$danger: #dc2626;
+$text: #111827;
+$text-body: #374151;
+$text-muted: #6b7280;
+$border: #e5e7eb;
+$surface: #f8fafc;
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
+.portal-card {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.portal-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 22px;
+  border-bottom: 1px solid $border;
+
+  .head-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: $primary-soft;
+    color: $primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .head-text { flex: 1; min-width: 0; }
+}
+
+.portal-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0;
+}
+
+.portal-card-subtitle {
+  font-size: .82rem;
+  color: $text-muted;
+  margin: 2px 0 0;
+}
+
+.portal-card-body { padding: 20px 22px; }
+
+.portal-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-top: 1px solid $border;
+  background: $surface;
+}
+
+.foot-spacer { flex: 1; }
+
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+.btn-portal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, $primary, $primary-dark);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity .2s, transform .1s;
+  &:hover:not(:disabled) { opacity: .92; transform: translateY(-1px); color: #fff; text-decoration: none; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-portal-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: .86rem;
+  font-weight: 600;
+  color: $text-body;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+  &:hover:not(:disabled) { background: $primary-soft; border-color: #93c5fd; color: $primary; text-decoration: none; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.link-portal {
+  font-size: .84rem;
+  font-weight: 600;
+  color: $primary;
+  &:hover { color: $primary-dark; }
+}
+
+// ─── Banners & empty states ───────────────────────────────────────────────────
+.portal-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  font-size: .87rem;
+  border: 1px solid;
+
+  > i { margin-top: 3px; }
+  .banner-text { flex: 1; }
+  .banner-title { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  &.banner-info    { background: $primary-soft; border-color: #bfdbfe; color: #1e40af; }
+  &.banner-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+  &.banner-warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+  &.banner-danger  { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 36px 16px;
+  color: $text-muted;
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $primary-soft;
+    color: $primary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+
+  .empty-title { font-size: 1rem; font-weight: 700; color: $text; margin-bottom: 4px; }
+  .empty-text { font-size: .86rem; margin-bottom: 16px; }
+}
+
+// ─── Status pills ─────────────────────────────────────────────────────────────
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.status-pending  { background: #fffbeb; color: #b45309; }
+  &.status-awaiting_payment { background: #fff7ed; color: #c2410c; }
+  &.status-notified { background: #e0f2fe; color: #0369a1; }
+  &.status-recalled { background: #f3f4f6; color: #4b5563; }
+  &.status-approved { background: #f0fdf4; color: #15803d; }
+  &.status-rejected { background: #fef2f2; color: #b91c1c; }
+  &.status-paid     { background: #f0fdf4; color: #15803d; }
+  &.status-unpaid   { background: #fff7ed; color: #c2410c; }
+}
+
+// Days left to respond to a notified offer.
+.countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: .72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid;
+
+  &.countdown-ok     { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+  &.countdown-warn   { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+  &.countdown-urgent { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+  &.countdown-ended  { background: #f3f4f6; border-color: #e5e7eb; color: #4b5563; }
+}
+
+// ─── Detail grid ──────────────────────────────────────────────────────────────
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px 24px;
+}
+
+.detail-item {
+  .detail-label {
+    font-size: .72rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 2px;
+  }
+  .detail-value { font-size: .92rem; font-weight: 600; color: $text; }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: .84rem;
+  font-weight: 500;
+  padding: 10px 22px;
+  span { flex: 1; }
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  opacity: .7;
+  &:hover { opacity: 1; }
+}

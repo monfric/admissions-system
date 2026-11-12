@@ -1,0 +1,133 @@
+.confirm-dialog {
+  min-width: 320px;
+  max-width: 450px;
+
+  @media (max-width: 600px) {
+    min-width: 280px;
+  }
+
+  // Dialog Content
+  .dialog-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 32px 24px 24px 24px;
+
+    // Icon
+    .dialog-icon {
+      margin-bottom: 20px;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+      }
+
+      &.text-danger {
+        mat-icon {
+          color: #dc3545;
+        }
+      }
+
+      &.text-warning {
+        mat-icon {
+          color: #ffc107;
+        }
+      }
+
+      &.text-success {
+        mat-icon {
+          color: #28a745;
+        }
+      }
+
+      &.text-info {
+        mat-icon {
+          color: #17a2b8;
+        }
+      }
+
+      &.text-primary {
+        mat-icon {
+          color: #007bff;
+        }
+      }
+    }
+
+    // Title
+    .dialog-title {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 600;
+      color: #212529;
+    }
+
+    // Message
+    .dialog-message {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #6c757d;
+    }
+  }
+
+  // Dialog Actions
+  .dialog-actions {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    button {
+      min-width: 100px;
+      font-weight: 500;
+    }
+
+    .btn-cancel {
+      &:hover {
+        background-color: #f8f9fa;
+      }
+    }
+
+    .btn-confirm {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  // Type-specific animations
+  &.confirm-dialog-danger {
+    .dialog-icon mat-icon {
+      animation: shake 0.5s;
+    }
+  }
+
+  &.confirm-dialog-success {
+    .dialog-icon mat-icon {
+      animation: scaleIn 0.3s;
+    }
+  }
+}
+
+// Animations
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+// Material Dialog Overrides
+::ng-deep {
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      border-radius: 12px;
+      overflow: visible;
+    }
+  }
+}

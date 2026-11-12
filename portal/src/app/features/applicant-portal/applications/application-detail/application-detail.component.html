@@ -1,0 +1,269 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Application Details</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/applicant/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a routerLink="/applicant/applications">My Applications</a></li>
+            <li class="breadcrumb-item active">{{ application?.application_number || 'Details' }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div *ngIf="loading" class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading application&hellip;
+      </div>
+
+      <div class="portal-card" *ngIf="!loading && !application">
+        <div class="empty-state">
+          <div class="empty-icon"><i class="fas fa-search"></i></div>
+          <div class="empty-title">{{ errorMessage || 'Application not found.' }}</div>
+          <a routerLink="/applicant/applications" class="btn-portal-outline mt-2"><i class="fas fa-arrow-left"></i>Back to My Applications</a>
+        </div>
+      </div>
+
+      <ng-container *ngIf="application as app">
+
+        <!-- Status banner -->
+        <ng-container [ngSwitch]="applicationStatus(app)">
+          <div class="portal-banner banner-warning" *ngSwitchCase="'awaiting_payment'">
+            <i class="fas fa-money-bill-wave"></i>
+            <div class="banner-text">
+              <span class="banner-title">Awaiting payment of your application fee</span>
+              Your application fee of <b>KES {{ app.application_fee | number:'1.2-2' }}</b> hasn't been received yet.
+              Your application will be reviewed once the fee is paid.
+            </div>
+          </div>
+          <div class="portal-banner banner-warning" *ngSwitchCase="'pending'">
+            <i class="fas fa-hourglass-half"></i>
+            <div class="banner-text">
+              <span class="banner-title">Your application is under review</span>
+              Your fee has been received. We'll let you know once a decision is made.
+            </div>
+          </div>
+          <div class="portal-banner banner-info" *ngSwitchCase="'notified'">
+            <i class="fas fa-bell"></i>
+            <div class="banner-text">
+              <span class="banner-title">Congratulations, you've been selected<ng-container *ngIf="selectedProgramme"> for {{ selectedProgramme }}</ng-container></span>
+              <ng-container *ngIf="app.respond_by">This offer is open until <b>{{ app.respond_by | date:'d MMM y' }}</b>.</ng-container>
+            </div>
+            <span class="countdown-pill countdown-lg" *ngIf="app.days_remaining != null"
+                  [ngClass]="'countdown-' + countdownDisplay(app.days_remaining).level">
+              <i class="fas fa-stopwatch"></i>{{ countdownDisplay(app.days_remaining).text }}
+            </span>
+          </div>
+          <div class="portal-banner banner-success" *ngSwitchCase="'approved'" [hidden]="!!app.admission">
+            <i class="fas fa-check-circle"></i>
+            <div class="banner-text">
+              <span class="banner-title">Your application has been approved<ng-container *ngIf="selectedProgramme"> for {{ selectedProgramme }}</ng-container></span>
+            </div>
+          </div>
+          <div class="portal-banner banner-danger" *ngSwitchCase="'rejected'">
+            <i class="fas fa-times-circle"></i>
+            <div class="banner-text">
+              <span class="banner-title">Your application was not successful</span>
+              You're welcome to apply again in a future intake.
+            </div>
+          </div>
+          <div class="portal-banner banner-warning" *ngSwitchCase="'recalled'">
+            <i class="fas fa-history"></i>
+            <div class="banner-text">
+              <span class="banner-title">This offer has been recalled</span>
+              The response period ended<ng-container *ngIf="app.respond_by"> on {{ app.respond_by | date:'d MMM y' }}</ng-container>.
+              Please contact the admissions office.
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Admission -->
+        <div class="admission-card" *ngIf="app.admission as adm">
+          <div class="admission-head">
+            <div class="admission-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div>
+              <h3 class="admission-title">Congratulations, you've been admitted</h3>
+              <p class="admission-subtitle">Application No. {{ app.application_number }}</p>
+            </div>
+          </div>
+
+          <div class="admission-number-block">
+            <div>
+              <div class="admission-label">Admission Number</div>
+              <div class="admission-number">{{ adm.admission_number }}</div>
+            </div>
+            <button type="button" class="btn-copy" (click)="copyAdmissionNumber(adm.admission_number)">
+              <i class="fas" [ngClass]="copied ? 'fa-check' : 'fa-copy'"></i>{{ copied ? 'Copied' : 'Copy' }}
+            </button>
+          </div>
+
+          <div class="admission-facts">
+            <div class="detail-item">
+              <div class="detail-label">Programme</div>
+              <div class="detail-value">{{ adm.programme_name }} <span class="text-muted small">({{ adm.programme_code }})</span></div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Intake</div>
+              <div class="detail-value">{{ adm.intake_name }}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Admitted On</div>
+              <div class="detail-value">{{ adm.admitted_at | date:'d MMM y' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Letters & documents -->
+        <div class="portal-card" *ngIf="app.letters.length > 0 || app.documents.length > 0 || app.uniform_status">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-envelope-open-text"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Letters &amp; Documents</h3>
+              <p class="portal-card-subtitle">Download your letters and the documents that come with them.</p>
+            </div>
+          </div>
+          <div class="portal-card-body p-0">
+            <div class="file-row" *ngFor="let letter of app.letters">
+              <div class="file-icon" [class.file-icon-admission]="letter.type === 'admission'">
+                <i class="fas" [ngClass]="letter.type === 'admission' ? 'fa-graduation-cap' : 'fa-file-signature'"></i>
+              </div>
+              <div class="file-info">
+                <span class="file-name">{{ letter.title }}</span>
+                <span class="file-meta">PDF &middot; {{ selectedProgramme || app.training_level_name }}</span>
+              </div>
+              <div class="file-actions">
+                <button type="button" class="btn-portal-outline btn-sm-portal" (click)="viewLetter(app, letter)">
+                  <i class="fas fa-eye"></i>View
+                </button>
+                <button type="button" class="btn-portal btn-sm-portal" (click)="downloadLetter(app, letter)"
+                        [disabled]="downloading === 'letter:' + letter.type">
+                  <i class="fas" [ngClass]="downloading === 'letter:' + letter.type ? 'fa-spinner fa-spin' : 'fa-download'"></i>Download
+                </button>
+              </div>
+            </div>
+
+            <div class="file-row" *ngFor="let doc of app.documents">
+              <div class="file-icon file-icon-doc"><i class="fas fa-paperclip"></i></div>
+              <div class="file-info">
+                <span class="file-name">{{ doc.document_name }}</span>
+                <span class="file-meta">{{ doc.file_name }}</span>
+              </div>
+              <div class="file-actions">
+                <button type="button" class="btn-portal-outline btn-sm-portal" *ngIf="canPreview(doc)" (click)="viewDocument(app, doc)">
+                  <i class="fas fa-eye"></i>View
+                </button>
+                <button type="button" class="btn-portal btn-sm-portal" (click)="downloadDocument(app, doc)"
+                        [disabled]="downloading === 'doc:' + doc.id">
+                  <i class="fas" [ngClass]="downloading === 'doc:' + doc.id ? 'fa-spinner fa-spin' : 'fa-download'"></i>Download
+                </button>
+              </div>
+            </div>
+
+            <!-- Uniform measurements: documents stay locked until submitted -->
+            <div class="file-row" *ngIf="app.uniform_status" [class.file-row-locked]="app.uniform_status === 'pending'">
+              <div class="file-icon" [ngClass]="app.uniform_status === 'pending' ? 'file-icon-locked' : 'file-icon-uniform'">
+                <i class="fas" [ngClass]="app.uniform_status === 'pending' ? 'fa-lock' : 'fa-ruler'"></i>
+              </div>
+              <div class="file-info">
+                <span class="file-name">Uniform Measurements</span>
+                <span class="file-meta" *ngIf="app.uniform_status === 'pending'">
+                  <ng-container *ngIf="app.locked_documents > 0; else noDocs">
+                    {{ app.locked_documents }} document{{ app.locked_documents === 1 ? ' is' : 's are' }} locked. Fill in your uniform measurements to unlock {{ app.locked_documents === 1 ? 'it' : 'them' }}.
+                  </ng-container>
+                  <ng-template #noDocs>Please fill in your uniform measurements.</ng-template>
+                </span>
+                <span class="file-meta" *ngIf="app.uniform_status === 'submitted'">Submitted</span>
+                <span class="file-meta" *ngIf="app.uniform_status === 'unlocked'">Reopened for corrections by the admissions office</span>
+              </div>
+              <div class="file-actions">
+                <a class="btn-sm-portal" [ngClass]="app.uniform_status === 'submitted' ? 'btn-portal-outline' : 'btn-portal'"
+                   [routerLink]="['/applicant/applications', app.id, 'uniform']">
+                  <i class="fas" [ngClass]="app.uniform_status === 'submitted' ? 'fa-eye' : 'fa-ruler'"></i>
+                  {{ app.uniform_status === 'pending' ? 'Fill Measurements' : app.uniform_status === 'unlocked' ? 'Update' : 'View' }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="portal-card">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-file-alt"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Application No. {{ app.application_number }}</h3>
+              <p class="portal-card-subtitle">Submitted {{ app.created_at | date:'d MMM y, h:mm a' }}</p>
+            </div>
+            <span class="status-pill" [ngClass]="'status-' + applicationStatus(app)">
+              <i class="fas" [ngClass]="decisionDisplay(applicationStatus(app)).icon"></i>
+              {{ decisionDisplay(applicationStatus(app)).label }}
+            </span>
+          </div>
+          <div class="portal-card-body">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <div class="detail-label">Intake</div>
+                <div class="detail-value">{{ app.intake_name }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Training Level</div>
+                <div class="detail-value">{{ app.training_level_name }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Mode of Residence</div>
+                <div class="detail-value">{{ app.residence || '—' }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Application Fee</div>
+                <div class="detail-value">KES {{ app.application_fee | number:'1.2-2' }}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Payment</div>
+                <div class="detail-value">
+                  <span class="status-pill" [ngClass]="'status-' + app.payment_status">
+                    {{ app.payment_status === 'paid' ? 'Paid' : 'Unpaid' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Programmes -->
+        <div class="portal-card">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Programme Choices</h3>
+              <p class="portal-card-subtitle">{{ app.programmes.length }} programme{{ app.programmes.length === 1 ? '' : 's' }} in this application</p>
+            </div>
+          </div>
+          <div class="portal-card-body p-0">
+            <div class="programme-row" *ngFor="let p of app.programmes">
+              <div class="programme-info">
+                <span class="programme-name">{{ p.programme_name }}</span>
+                <span class="programme-code">
+                  <ng-container *ngIf="choiceLabel(p.choice)">{{ choiceLabel(p.choice) }} &middot; </ng-container>{{ p.programme_code }}
+                </span>
+              </div>
+              <span class="status-pill" [ngClass]="'status-' + programmeStatus(app, p)">
+                {{ decisionDisplay(programmeStatus(app, p)).label }}
+              </span>
+            </div>
+          </div>
+          <div class="portal-card-foot">
+            <a routerLink="/applicant/applications" class="btn-portal-outline"><i class="fas fa-arrow-left"></i>Back to My Applications</a>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </section>
+</div>

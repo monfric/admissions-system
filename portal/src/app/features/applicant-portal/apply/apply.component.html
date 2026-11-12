@@ -1,0 +1,169 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Apply for a Course</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/applicant/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item active">Apply</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div *ngIf="loading" class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading open intakes&hellip;
+      </div>
+
+      <ng-container *ngIf="!loading">
+
+        <!-- No open intakes -->
+        <div class="portal-card" *ngIf="intakes.length === 0">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+            <div class="empty-title">No intakes are open right now</div>
+            <div class="empty-text">Please check back later. Open intakes will appear here.</div>
+            <a routerLink="/applicant/dashboard" class="btn-portal-outline"><i class="fas fa-arrow-left"></i>Back to Dashboard</a>
+          </div>
+        </div>
+
+        <div class="portal-banner banner-info" *ngIf="allApplied">
+          <i class="fas fa-info-circle"></i>
+          <div class="banner-text">
+            You've already applied for every open intake. You can follow your applications on
+            <a routerLink="/applicant/applications" class="link-portal">My Applications</a>.
+          </div>
+        </div>
+
+        <div class="portal-card" *ngIf="intakes.length > 0">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-file-signature"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">New Application</h3>
+              <p class="portal-card-subtitle">You can apply once per intake, with a 1st choice and an optional 2nd choice programme. The fee is charged once per application.</p>
+            </div>
+          </div>
+
+          <div class="portal-card-body">
+
+            <!-- 1. Intake -->
+            <div class="apply-section">
+              <div class="section-label"><span class="section-num">1</span>Choose an intake</div>
+              <div class="option-grid">
+                <button type="button" class="option-tile" *ngFor="let intake of intakes"
+                        [class.selected]="selectedIntake === intake"
+                        [disabled]="intake.already_applied || submitting"
+                        (click)="selectIntake(intake)">
+                  <i class="fas tile-check" [ngClass]="selectedIntake === intake ? 'fa-check-circle' : 'fa-circle'"></i>
+                  <span class="tile-title">{{ intake.intake_name }}</span>
+                  <span class="tile-meta" *ngIf="!intake.already_applied">
+                    {{ intake.training_levels.length }} training level{{ intake.training_levels.length === 1 ? '' : 's' }} open
+                  </span>
+                  <span class="tile-meta tile-applied" *ngIf="intake.already_applied">
+                    <i class="fas fa-check mr-1"></i>Applied &middot; No. {{ intake.application_number }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Training level + fee -->
+            <div class="apply-section" *ngIf="selectedIntake">
+              <div class="section-label"><span class="section-num">2</span>Choose a training level</div>
+              <div class="option-grid">
+                <button type="button" class="option-tile" *ngFor="let level of selectedIntake.training_levels"
+                        [class.selected]="selectedLevel === level"
+                        [disabled]="submitting"
+                        (click)="selectLevel(level)">
+                  <i class="fas tile-check" [ngClass]="selectedLevel === level ? 'fa-check-circle' : 'fa-circle'"></i>
+                  <span class="tile-title">{{ level.training_level_name }}</span>
+                  <span class="tile-meta">
+                    {{ level.programmes.length }} programme{{ level.programmes.length === 1 ? '' : 's' }} available
+                  </span>
+                </button>
+              </div>
+
+              <div class="fee-box" *ngIf="selectedLevel">
+                <div class="fee-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="fee-text">
+                  <span class="fee-label">Application fee</span>
+                  <span class="fee-amount">KES {{ selectedLevel.application_fee | number:'1.2-2' }}</span>
+                  <span class="fee-note">
+                    Charged once for this application, whether you choose one or two programmes.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Programmes -->
+            <div class="apply-section" *ngIf="selectedLevel">
+              <div class="section-label"><span class="section-num">3</span>Choose your programmes</div>
+              <div class="choice-grid">
+                <div class="choice-box" [class.choice-filled]="firstChoiceId">
+                  <label class="choice-label"><span class="choice-badge">1st</span>1st Choice <span class="text-danger">*</span></label>
+                  <select class="form-control" [(ngModel)]="firstChoiceId" (ngModelChange)="onFirstChoiceChange()" [disabled]="submitting">
+                    <option [ngValue]="null">— Select your 1st choice —</option>
+                    <option *ngFor="let p of selectedLevel.programmes" [ngValue]="p.intake_programme_id">
+                      {{ p.programme_name }} ({{ p.programme_code }})
+                    </option>
+                  </select>
+                </div>
+                <div class="choice-box" [class.choice-filled]="secondChoiceId">
+                  <label class="choice-label"><span class="choice-badge choice-badge-2">2nd</span>2nd Choice <span class="text-muted small">(optional)</span></label>
+                  <select class="form-control" [(ngModel)]="secondChoiceId" [disabled]="submitting || !firstChoiceId || secondChoiceOptions.length === 0">
+                    <option [ngValue]="null">{{ secondChoiceOptions.length ? '— No 2nd choice —' : 'No other programme available' }}</option>
+                    <option *ngFor="let p of secondChoiceOptions" [ngValue]="p.intake_programme_id">
+                      {{ p.programme_name }} ({{ p.programme_code }})
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Residence -->
+            <div class="apply-section" *ngIf="selectedLevel && firstChoiceId">
+              <div class="section-label"><span class="section-num">4</span>Choose your mode of residence</div>
+              <div class="residence-select">
+                <label class="choice-label">Mode of Residence <span class="text-danger">*</span></label>
+                <select class="form-control" [(ngModel)]="residence" [disabled]="submitting">
+                  <option value="">— Select mode of residence —</option>
+                  <option *ngFor="let r of residenceOptions" [value]="r">{{ r }}</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="error-banner" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>{{ errorMessage }}</span>
+            <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="portal-card-foot">
+            <span class="selection-summary" *ngIf="selectedLevel">
+              {{ firstChoiceId ? (secondChoiceId ? '1st and 2nd choice selected' : '1st choice selected') : 'No programme selected yet' }}
+            </span>
+            <span class="foot-spacer"></span>
+            <button type="button" class="btn-portal" (click)="submit()"
+                    [disabled]="submitting || !selectedLevel || !firstChoiceId || !residence">
+              <ng-container *ngIf="!submitting"><i class="fas fa-paper-plane"></i>Submit Application</ng-container>
+              <ng-container *ngIf="submitting"><i class="fas fa-spinner fa-spin"></i>Submitting&hellip;</ng-container>
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-danger" *ngIf="intakes.length === 0 && errorMessage">{{ errorMessage }}</div>
+      </ng-container>
+
+    </div>
+  </section>
+</div>

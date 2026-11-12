@@ -1,0 +1,32 @@
+// Each programme in an application with its own status, so applicants can
+// follow every choice from the list without opening the application.
+.programme-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  & + & {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #e5e7eb;
+  }
+}
+
+.programme-status-name { min-width: 0; }
+
+.admission-no {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-weight: 700;
+  color: #15803d;
+  white-space: nowrap;
+}
+
+.choice-tag {
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}

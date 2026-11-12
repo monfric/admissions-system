@@ -1,0 +1,66 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Payments</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/applicant/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item active">Payments</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">My Application Payments</h3>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Application No</th>
+                  <th>Intake</th>
+                  <th>Transaction Code</th>
+                  <th>Payment Method</th>
+                  <th>Payment Amount</th>
+                  <th>Paid At</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="7" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Loading your payments&hellip;
+                  </td>
+                </tr>
+                <tr *ngIf="!loading && !errorMessage && payments.length === 0">
+                  <td colspan="7" class="text-center py-4 text-muted">No payments recorded yet.</td>
+                </tr>
+                <tr *ngFor="let p of payments; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td><b>{{ p.application_number }}</b></td>
+                  <td>{{ p.intake_name }}</td>
+                  <td>{{ p.transaction_code || '—' }}</td>
+                  <td>{{ p.payment_method || '—' }}</td>
+                  <td>KES {{ p.amount | number:'1.2-2' }}</td>
+                  <td>{{ p.paid_at ? (p.paid_at | date:'d MMM y, h:mm a') : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

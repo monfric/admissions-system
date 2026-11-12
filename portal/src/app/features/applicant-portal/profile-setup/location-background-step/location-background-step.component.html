@@ -1,0 +1,72 @@
+<div class="tab-pane" [formGroup]="form">
+  <div class="form-section-title">
+    <i class="fas fa-map-marker-alt mr-2 text-primary"></i>Location
+  </div>
+  <div class="row">
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label req">County</label>
+      <select class="form-control" formControlName="county" [class.is-invalid]="fieldError('county')">
+        <option value="">— Select County —</option>
+        <option *ngFor="let c of options.counties" [value]="c">{{ c }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('county')">{{ fieldError('county') }}</div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label req">Sub-County</label>
+      <input type="text" class="form-control" formControlName="sub_county"
+             placeholder="e.g. Imenti North" [class.is-invalid]="fieldError('sub_county')">
+      <div class="invalid-feedback" *ngIf="fieldError('sub_county')">{{ fieldError('sub_county') }}</div>
+    </div>
+
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-church mr-2 text-primary"></i>Background
+  </div>
+  <div class="row">
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label req">Denomination</label>
+      <select class="form-control" formControlName="denomination" [class.is-invalid]="fieldError('denomination')">
+        <option value="">— Select Denomination —</option>
+        <option *ngFor="let d of denominations" [value]="d">{{ d }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('denomination')">{{ fieldError('denomination') }}</div>
+    </div>
+
+    <div class="col-md-6 mb-3" *ngIf="form.get('denomination')?.value === 'Other'">
+      <label class="form-label req">Specify Denomination</label>
+      <input type="text" class="form-control" formControlName="denomination_other"
+             placeholder="e.g. Seventh-day Adventist" [class.is-invalid]="fieldError('denomination_other')">
+      <div class="invalid-feedback" *ngIf="fieldError('denomination_other')">{{ fieldError('denomination_other') }}</div>
+    </div>
+
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-wheelchair mr-2 text-primary"></i>Disability
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <div class="toggle-row">
+        <label class="toggle-item">
+          <span class="toggle-label">Has Disability?</span>
+          <span class="toggle-desc">Applicant has a special need or disability</span>
+          <div class="custom-toggle">
+            <input type="checkbox" formControlName="has_disability">
+            <span class="toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-3" *ngIf="form.get('has_disability')?.value">
+      <label class="form-label req">Specify Disability</label>
+      <input type="text" class="form-control" formControlName="disability_details"
+             placeholder="Describe the disability or special need" [class.is-invalid]="fieldError('disability_details')">
+      <div class="invalid-feedback" *ngIf="fieldError('disability_details')">{{ fieldError('disability_details') }}</div>
+    </div>
+  </div>
+</div>

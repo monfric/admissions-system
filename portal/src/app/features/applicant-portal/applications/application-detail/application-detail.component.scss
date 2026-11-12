@@ -1,0 +1,173 @@
+.programme-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  &:last-child { border-bottom: none; }
+}
+
+.programme-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.programme-name { font-size: .9rem; font-weight: 600; color: #111827; }
+.programme-code { font-size: .76rem; color: #6b7280; }
+
+.countdown-pill.countdown-lg {
+  align-self: center;
+  font-size: .82rem;
+  padding: 5px 12px;
+}
+
+// ─── Admission card ───────────────────────────────────────────────────────────
+.admission-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f0fdf4 0%, #fff 60%);
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+
+  // Faint watermark icon on the right.
+  &::after {
+    content: '\f19d';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 7rem;
+    color: #16a34a;
+    opacity: .06;
+    pointer-events: none;
+  }
+}
+
+.admission-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admission-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #16a34a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.admission-title { font-size: 1.1rem; font-weight: 700; color: #14532d; margin: 0; }
+.admission-subtitle { font-size: .82rem; color: #166534; margin: 2px 0 0; }
+
+.admission-number-block {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px dashed #86efac;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.admission-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.admission-number {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #14532d;
+  line-height: 1.2;
+}
+
+.btn-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: #15803d;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: #f0fdf4; }
+}
+
+.admission-facts {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px 24px;
+}
+
+@media (max-width: 575.98px) {
+  .admission-card { padding: 18px 16px; }
+  .admission-number { font-size: 1.35rem; }
+  .admission-card::after { display: none; }
+}
+
+// ─── Letters & documents ──────────────────────────────────────────────────────
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  &:last-child { border-bottom: none; }
+}
+
+.file-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.file-icon-admission { background: #f0fdf4; color: #16a34a; }
+  &.file-icon-doc { background: #f3f4f6; color: #4b5563; }
+  &.file-icon-uniform { background: #f0fdfa; color: #0d9488; }
+  &.file-icon-locked { background: #fef3c7; color: #b45309; }
+}
+
+// Uniform measurements still to fill in (documents locked).
+.file-row.file-row-locked { background: #fffbeb; }
+.file-row-locked .file-meta { white-space: normal; color: #92400e; }
+
+.file-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.file-name { font-size: .9rem; font-weight: 700; color: #111827; }
+.file-meta { font-size: .76rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.file-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.btn-sm-portal { padding: 6px 12px; font-size: .8rem; }
+
+@media (max-width: 575.98px) {
+  .file-row { flex-wrap: wrap; }
+  .file-actions { width: 100%; justify-content: flex-end; }
+}

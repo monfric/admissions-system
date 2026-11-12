@@ -1,0 +1,51 @@
+<div class="tab-pane" [formGroup]="form">
+  <div class="form-section-title">
+    <i class="fas fa-user-shield mr-2 text-primary"></i>Guardian Details
+  </div>
+  <div class="row">
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Guardian Name</label>
+      <input type="text" class="form-control" formControlName="guardian_name"
+             placeholder="Parent/Guardian Full Name" [class.is-invalid]="fieldError('guardian_name')">
+      <div class="invalid-feedback" *ngIf="fieldError('guardian_name')">{{ fieldError('guardian_name') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Relationship</label>
+      <select class="form-control" formControlName="relationship" [class.is-invalid]="fieldError('relationship')">
+        <option value="">— Select Relationship —</option>
+        <option *ngFor="let r of options.relationships" [value]="r">{{ r }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('relationship')">{{ fieldError('relationship') }}</div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label req">Guardian Contact</label>
+      <input type="tel" appDigitsOnly class="form-control" formControlName="guardian_contact"
+             placeholder="0787654321" [class.is-invalid]="fieldError('guardian_contact')">
+      <div class="invalid-feedback" *ngIf="fieldError('guardian_contact')">{{ fieldError('guardian_contact') }}</div>
+    </div>
+
+  </div>
+
+  <div class="form-section-title mt-2">
+    <i class="fas fa-hand-holding-heart mr-2 text-primary"></i>Sponsor Details (Optional)
+  </div>
+  <div class="row">
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Sponsor Name</label>
+      <input type="text" class="form-control" formControlName="sponsor_name"
+             placeholder="Organization/Individual">
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Sponsor Contact</label>
+      <input type="tel" appDigitsOnly class="form-control" formControlName="sponsor_contact"
+             placeholder="0700000000" [class.is-invalid]="fieldError('sponsor_contact')">
+      <div class="invalid-feedback" *ngIf="fieldError('sponsor_contact')">{{ fieldError('sponsor_contact') }}</div>
+    </div>
+
+  </div>
+</div>

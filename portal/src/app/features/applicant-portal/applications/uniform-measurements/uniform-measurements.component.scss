@@ -1,0 +1,135 @@
+.unit-note { font-size: .78rem; font-weight: 500; color: #6b7280; }
+
+.set-select { max-width: 200px; }
+
+.progress-pill {
+  align-self: center;
+  font-size: .76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+
+  &.progress-done { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+}
+
+// ─── Garment cards ────────────────────────────────────────────────────────────
+.garment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.garment-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.garment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border-bottom: 1px solid #dbeafe;
+  font-weight: 700;
+  color: #1e40af;
+  font-size: .9rem;
+}
+
+.garment-unit { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: #3b82f6; }
+
+.measure-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child { border-bottom: none; }
+}
+
+.measure-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: .86rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.measure-input {
+  display: flex;
+  align-items: center;
+  width: 110px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+  &.is-invalid { border-color: #dc2626; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    padding: 6px 8px;
+    font-size: .88rem;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .suffix {
+    padding: 0 8px;
+    font-size: .76rem;
+    color: #6b7280;
+    background: #f8fafc;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid #e5e7eb;
+  }
+}
+
+.measure-value {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #111827;
+  small { font-weight: 500; color: #6b7280; }
+}
+
+.measure-error {
+  flex-basis: 100%;
+  text-align: right;
+  font-size: .74rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+// ─── Tailor confirmation ──────────────────────────────────────────────────────
+.tailor-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: .87rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+
+  input { width: 17px; height: 17px; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+  &.is-invalid { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+  &.confirmed { cursor: default; background: #f0fdf4; border-color: #bbf7d0; color: #166534; i { margin-top: 3px; } }
+}

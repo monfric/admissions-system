@@ -1,0 +1,159 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Dashboard</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item">Applicant Portal</li>
+            <li class="breadcrumb-item active">Dashboard</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <!-- Welcome -->
+      <div class="portal-card welcome-card">
+        <div class="welcome-body">
+          <div>
+            <h2 class="welcome-title">Welcome back, {{ firstName }}</h2>
+            <p class="welcome-text" *ngIf="!loading && openIntakeCount > 0">
+              {{ openIntakeCount }} intake{{ openIntakeCount === 1 ? ' is' : 's are' }} open for applications.
+            </p>
+            <p class="welcome-text" *ngIf="!loading && openIntakeCount === 0">
+              There are no new intakes for you to apply to right now.
+            </p>
+          </div>
+          <a routerLink="/applicant/apply" class="btn-portal" *ngIf="!loading && openIntakeCount > 0">
+            <i class="fas fa-file-signature"></i>Apply for a Course
+          </a>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="text-center py-4 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading&hellip;
+      </div>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <ng-container *ngIf="!loading && !errorMessage">
+
+        <!-- Admissions -->
+        <div class="portal-banner banner-success" *ngFor="let app of admissions">
+          <i class="fas fa-graduation-cap"></i>
+          <div class="banner-text">
+            <span class="banner-title">You've been admitted to {{ app.admission!.programme_name }} ({{ app.admission!.intake_name }})</span>
+            Admission No. <b class="admission-no">{{ app.admission!.admission_number }}</b>
+          </div>
+          <a [routerLink]="['/applicant/applications', app.id]" class="link-portal">
+            {{ hasLetter(app, 'admission') ? 'Get your admission letter' : 'View' }}
+          </a>
+        </div>
+
+        <!-- Uniform measurements to fill in (documents locked until then) -->
+        <div class="portal-banner banner-warning" *ngFor="let app of uniformPending">
+          <i class="fas fa-ruler"></i>
+          <div class="banner-text">
+            <span class="banner-title">Fill in your uniform measurements</span>
+            <ng-container *ngIf="app.locked_documents > 0; else uniformOnly">
+              Your joining documents for {{ app.admission?.programme_name }} will be available once you submit your uniform measurements.
+            </ng-container>
+            <ng-template #uniformOnly>Your uniform measurements for {{ app.admission?.programme_name }} are required.</ng-template>
+          </div>
+          <a [routerLink]="['/applicant/applications', app.id, 'uniform']" class="link-portal">
+            {{ app.uniform_status === 'unlocked' ? 'Update measurements' : 'Fill measurements' }}
+          </a>
+        </div>
+
+        <!-- Needs attention -->
+        <div class="portal-banner banner-info" *ngFor="let app of offers">
+          <i class="fas fa-bell"></i>
+          <div class="banner-text">
+            <span class="banner-title">You've been selected<ng-container *ngIf="selectedProgramme(app)"> for {{ selectedProgramme(app) }}</ng-container></span>
+            {{ app.intake_name }} intake &middot; Application No. {{ app.application_number }}<ng-container *ngIf="app.respond_by"> &middot; open until <b>{{ app.respond_by | date:'d MMM y' }}</b></ng-container>
+          </div>
+          <span class="countdown-pill" *ngIf="app.days_remaining != null"
+                [ngClass]="'countdown-' + countdownDisplay(app.days_remaining).level">
+            <i class="fas fa-stopwatch"></i>{{ countdownDisplay(app.days_remaining).text }}
+          </span>
+          <a [routerLink]="['/applicant/applications', app.id]" class="link-portal">
+            {{ hasLetter(app, 'provisional') ? 'Get your offer letter' : 'View' }}
+          </a>
+        </div>
+
+        <div class="portal-banner banner-warning" *ngFor="let app of unpaid">
+          <i class="fas fa-money-bill-wave"></i>
+          <div class="banner-text">
+            <span class="banner-title">Application fee not yet received</span>
+            KES {{ app.application_fee | number:'1.2-2' }} for application No. {{ app.application_number }}
+            ({{ app.intake_name }}). Your application will be reviewed once the fee is paid.
+          </div>
+          <a [routerLink]="['/applicant/applications', app.id]" class="link-portal">View</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="stat-icon icon-total"><i class="fas fa-file-alt"></i></div>
+            <div><div class="stat-value">{{ applications.length }}</div><div class="stat-label">Applications</div></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-icon icon-pending"><i class="fas fa-hourglass-half"></i></div>
+            <div><div class="stat-value">{{ count('pending') }}</div><div class="stat-label">Under Review</div></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-icon icon-notified"><i class="fas fa-bell"></i></div>
+            <div><div class="stat-value">{{ count('notified') }}</div><div class="stat-label">Notified</div></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-icon icon-approved"><i class="fas fa-check-circle"></i></div>
+            <div><div class="stat-value">{{ count('approved') }}</div><div class="stat-label">Approved</div></div>
+          </div>
+        </div>
+
+        <!-- Recent applications -->
+        <div class="portal-card">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-list-alt"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Recent Applications</h3>
+            </div>
+            <a routerLink="/applicant/applications" class="link-portal" *ngIf="applications.length > 0">View all</a>
+          </div>
+
+          <div class="empty-state" *ngIf="applications.length === 0">
+            <div class="empty-icon"><i class="fas fa-file-signature"></i></div>
+            <div class="empty-title">You haven't applied yet</div>
+            <div class="empty-text">Choose an intake and the programmes you're interested in.</div>
+            <a routerLink="/applicant/apply" class="btn-portal" *ngIf="openIntakeCount > 0">
+              <i class="fas fa-file-signature"></i>Apply for a Course
+            </a>
+          </div>
+
+          <a class="recent-row" *ngFor="let app of recentApplications" [routerLink]="['/applicant/applications', app.id]">
+            <div class="recent-main">
+              <span class="recent-title">{{ app.intake_name }} &middot; {{ app.training_level_name }}</span>
+              <span class="recent-meta">
+                No. {{ app.application_number }} &middot;
+                {{ app.programmes.length }} programme{{ app.programmes.length === 1 ? '' : 's' }} &middot;
+                applied {{ app.created_at | date:'d MMM y' }}
+              </span>
+            </div>
+            <span class="status-pill" [ngClass]="'status-' + applicationStatus(app)">
+              <i class="fas" [ngClass]="decisionDisplay(applicationStatus(app)).icon"></i>
+              {{ decisionDisplay(applicationStatus(app)).label }}
+            </span>
+            <i class="fas fa-chevron-right recent-arrow"></i>
+          </a>
+        </div>
+
+      </ng-container>
+    </div>
+  </section>
+</div>

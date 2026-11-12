@@ -1,0 +1,117 @@
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Complete Your Profile</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item">Applicant Portal</li>
+            <li class="breadcrumb-item active">Profile Setup</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div *ngIf="loading" class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin mr-1"></i> Loading your profile&hellip;
+      </div>
+
+      <div class="wizard mb-4" *ngIf="!loading && profile">
+
+        <!-- ===== PROGRESS ===== -->
+        <div class="wizard-progress">
+          <div class="wizard-intro">
+            <div>
+              <h2 class="wizard-title">Hi {{ profile.first_name }}, let's set up your profile</h2>
+              <p class="wizard-subtitle">Finish each step to unlock the next. Your progress is saved as you go.</p>
+            </div>
+            <div class="wizard-counter">
+              <span class="counter-step">Step {{ activeStep + 1 }} of {{ steps.length }}</span>
+              <span class="counter-percent">{{ progressPercent }}% complete</span>
+            </div>
+          </div>
+
+          <ol class="stepper">
+            <li *ngFor="let step of steps; let i = index; let last = last"
+                class="stepper-item"
+                [ngClass]="'is-' + stepState(i)"
+                [class.has-error]="stepHasError(i)"
+                [class.line-done]="!last && i < unlockedStep">
+              <button type="button" class="stepper-node"
+                      [disabled]="stepState(i) === 'locked' || saving"
+                      [attr.aria-current]="i === activeStep ? 'step' : null"
+                      [attr.title]="stepState(i) === 'locked' ? 'Complete the earlier steps first' : step.label"
+                      (click)="selectStep(i)">
+                <i class="fas fa-check" *ngIf="stepState(i) === 'done'"></i>
+                <i class="fas fa-lock" *ngIf="stepState(i) === 'locked'"></i>
+                <span *ngIf="stepState(i) === 'current' || stepState(i) === 'open'">{{ i + 1 }}</span>
+              </button>
+              <span class="stepper-label">{{ step.label }}</span>
+            </li>
+          </ol>
+          <div class="stepper-current-label">{{ steps[activeStep].label }}</div>
+        </div>
+
+        <!-- ===== STEP CARD ===== -->
+        <div class="wizard-card">
+          <div class="wizard-card-head">
+            <div class="step-icon"><i class="fas" [ngClass]="steps[activeStep].icon"></i></div>
+            <div>
+              <h3 class="step-title">{{ steps[activeStep].label }}</h3>
+              <p class="step-desc">{{ steps[activeStep].description }}</p>
+            </div>
+          </div>
+
+          <div class="wizard-card-body" [ngSwitch]="steps[activeStep].key">
+            <app-personal-step *ngSwitchCase="'personal'" [form]="profileForm"></app-personal-step>
+            <app-location-background-step *ngSwitchCase="'location'" [form]="profileForm"></app-location-background-step>
+            <app-guardian-sponsor-step *ngSwitchCase="'guardian'" [form]="profileForm"></app-guardian-sponsor-step>
+            <app-education-step *ngSwitchCase="'education'" [form]="profileForm"></app-education-step>
+            <app-documents-step *ngSwitchCase="'documents'" [profile]="profile" (uploaded)="reloadProfile()"></app-documents-step>
+            <app-review-submit-step *ngSwitchCase="'review'" [form]="profileForm" [profile]="profile"
+                                    (editStep)="selectStep($event)"></app-review-submit-step>
+          </div>
+
+          <!-- ===== ERROR BANNER ===== -->
+          <div class="error-banner" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>{{ errorMessage }}</span>
+            <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- ===== FOOTER ===== -->
+          <div class="wizard-card-foot">
+            <button type="button" class="btn-back" *ngIf="activeStep > 0" [disabled]="saving || submitting" (click)="previous()">
+              <i class="fas fa-arrow-left"></i>Back
+            </button>
+            <span class="foot-spacer"></span>
+            <span class="save-status">
+              <ng-container *ngIf="saving"><i class="fas fa-spinner fa-spin"></i>Saving&hellip;</ng-container>
+              <ng-container *ngIf="!saving && profileForm.dirty"><i class="fas fa-pen"></i>Unsaved changes</ng-container>
+              <ng-container *ngIf="!saving && !profileForm.dirty"><i class="fas fa-check-circle text-success"></i>Saved</ng-container>
+            </span>
+            <button type="button" class="btn-continue" *ngIf="!isLastStep" (click)="next()" [disabled]="saving">
+              Continue<i class="fas fa-arrow-right"></i>
+            </button>
+            <button type="button" class="btn-continue" *ngIf="isLastStep" (click)="submit()" [disabled]="submitting || saving">
+              <ng-container *ngIf="!submitting"><i class="fas fa-paper-plane"></i>Submit Profile</ng-container>
+              <ng-container *ngIf="submitting"><i class="fas fa-spinner fa-spin"></i>Submitting&hellip;</ng-container>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="alert alert-danger" *ngIf="!loading && !profile && errorMessage">{{ errorMessage }}</div>
+
+    </div>
+  </section>
+</div>
