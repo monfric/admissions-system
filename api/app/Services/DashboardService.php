@@ -61,6 +61,8 @@ final class DashboardService
             "SELECT COUNT(*) AS total,
                     COALESCE(SUM(ab.created_at >= ?), 0) AS today,
                     COALESCE(SUM(ab.payment_status = 'unpaid'), 0) AS unpaid,
+                    COALESCE(SUM(ab.payment_status = 'unpaid' AND (SELECT pp.status FROM payment_proofs pp
+                        WHERE pp.application_batch_id = ab.id AND pp.deleted_at IS NULL ORDER BY pp.id DESC LIMIT 1) = 'submitted'), 0) AS proofs_awaiting,
                     COALESCE(SUM(ab.payment_status = 'paid'), 0) AS paid,
                     COALESCE(SUM($paidSince), 0) AS paid_today,
                     COALESCE(SUM(ab.payment_status = 'paid' AND ab.decision_status = 'pending'), 0) AS pending_decision,

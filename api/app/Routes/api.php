@@ -109,6 +109,9 @@ return function (Router $r): void {
         $r->get('/application-batches', [StaffApplicationHandler::class, 'list']);
         $r->get('/application-batches/stats', [StaffApplicationHandler::class, 'stats']);
         $r->post('/application-batches/:id/payments', [StaffApplicationHandler::class, 'pay']);
+        $r->post('/application-batches/:id/payment-proof', [StaffApplicationHandler::class, 'uploadProof']);
+        $r->get('/application-batches/:id/payment-proof/file', [StaffApplicationHandler::class, 'proofFile']);
+        $r->post('/application-batches/:id/payment-proof/reject', [StaffApplicationHandler::class, 'rejectProof']);
         $r->post('/application-batches/:id/notify', [StaffApplicationHandler::class, 'notify']);
         $r->post('/application-batches/:id/decision', [StaffApplicationHandler::class, 'decide']);
 
@@ -167,6 +170,8 @@ return function (Router $r): void {
             $r->get('/applications/:id', [ApplicantPortalApplicationHandler::class, 'show']);
             $r->get('/applications/:id/letters/:type', [ApplicantPortalApplicationHandler::class, 'letter']);
             $r->get('/applications/:id/documents/:documentId', [ApplicantPortalApplicationHandler::class, 'document']);
+            $r->post('/applications/:id/payment-proof', [ApplicantPortalApplicationHandler::class, 'uploadPaymentProof']);
+            $r->get('/applications/:id/payment-proof/file', [ApplicantPortalApplicationHandler::class, 'paymentProofFile']);
             // Admitted applicants fill in their uniform measurements to unlock their documents.
             $r->get('/applications/:id/uniform', [ApplicantPortalApplicationHandler::class, 'uniformForm']);
             $r->put('/applications/:id/uniform', [ApplicantPortalApplicationHandler::class, 'submitUniform']);

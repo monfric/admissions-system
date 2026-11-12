@@ -51,6 +51,21 @@ final class ApplicantPortalApplicationHandler
         Response::success('Application retrieved successfully', $this->service->myApplication($request->applicantId, $id));
     }
 
+    /** Proof of the fee payment (multipart: file, transaction_code). */
+    public function uploadPaymentProof(Request $request): never
+    {
+        $id = $request->intParam('id', 'application ID');
+        $application = $this->service->uploadPaymentProof(
+            $request->applicantId, $id, $request->file('file'), (string) $request->form('transaction_code', '')
+        );
+        Response::success('Payment proof uploaded. The admissions office will confirm your payment.', $application);
+    }
+
+    public function paymentProofFile(Request $request): never
+    {
+        $this->service->paymentProofFile($request->applicantId, $request->intParam('id', 'application ID'));
+    }
+
     /** A staff-uploaded document (fee structure, joining requirements, …). */
     public function document(Request $request): never
     {

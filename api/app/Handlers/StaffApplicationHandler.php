@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Validator;
 use App\Services\AdmissionService;
+use App\Services\PaymentProofService;
 use App\Services\StaffApplicationService;
 use App\Services\UniformSets;
 
@@ -55,6 +56,7 @@ final class StaffApplicationHandler
             'paid'              => Query::oneOf($r, 'paid', self::PERIODS),
             'programme_match'   => Query::oneOf($r, 'programme_match', ['any', 'notified', 'recalled']),
             'days_remaining'    => Query::oneOf($r, 'days_remaining', ['last_day', 'le3', 'le7', 'le10', 'gt10']),
+            'proof_status'      => Query::oneOf($r, 'proof_status', ['none', 'submitted', 'rejected']),
         ];
         $order = Query::orderBy($r, [
             'created_at' => 'ab.created_at', 'updated_at' => 'ab.updated_at', 'notified_at' => 'ab.notified_at',
@@ -75,7 +77,29 @@ final class StaffApplicationHandler
         $req = Validator::validate($r->json(), [
             'payment_method' => 'required|string|max:50', 'transaction_code' => 'required|string|max:100',
         ]);
-        Response::created('Payment recorded successfully', $this->applications->recordPayment($id, $req));
+        Response::created('Payment recorded successfully', $this->applications->recordPayment($id, $req, (int) $r->userId));
+    }
+
+    // ── Payment proofs ───────────────────────────────────────────────────────
+
+    /** Staff upload a proof for the applicant (e.g. a photo of an office receipt). */
+    public function uploadProof(Request $r): never
+    {
+        $id = $r->intParam('id', 'application batch ID');
+        $proof = (new PaymentProofService())->upload($id, $r->file('file'), (string) $r->form('transaction_code', ''), (int) $r->userId);
+        Response::created('Payment proof uploaded successfully', $proof);
+    }
+
+    public function proofFile(Request $r): never
+    {
+        (new PaymentProofService())->send($r->intParam('id', 'application batch ID'));
+    }
+
+    public function rejectProof(Request $r): never
+    {
+        $id = $r->intParam('id', 'application batch ID');
+        $req = Validator::validate($r->json(), ['reason' => 'required|string|min:3|max:255']);
+        Response::success('Payment proof rejected', (new PaymentProofService())->reject($id, $req['reason'], (int) $r->userId));
     }
 
     public function notify(Request $r): never

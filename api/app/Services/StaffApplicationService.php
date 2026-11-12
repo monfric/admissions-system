@@ -91,6 +91,16 @@ final class StaffApplicationService
                 $params[] = $to;
             }
         }
+        if ($f['proof_status'] !== '') {
+            // The latest proof's status; "none" = no proof uploaded yet.
+            $latest = "(SELECT pp.status FROM payment_proofs pp WHERE pp.application_batch_id = ab.id AND pp.deleted_at IS NULL ORDER BY pp.id DESC LIMIT 1)";
+            if ($f['proof_status'] === 'none') {
+                $where[] = "$latest IS NULL";
+            } else {
+                $where[] = "$latest = ?";
+                $params[] = $f['proof_status'];
+            }
+        }
         if (($since = ApplicantService::periodSince($f['applied'])) !== null) {
             $where[] = 'ab.created_at >= ?';
             $params[] = $since;
@@ -181,8 +191,11 @@ final class StaffApplicationService
         return $stats;
     }
 
-    /** Records the application fee (amount always taken from the fee tier, never the client). */
-    public function recordPayment(int $batchId, array $req): array
+    /**
+     * Records the application fee (amount always taken from the fee tier, never
+     * the client) against the applicant's submitted payment proof, which it accepts.
+     */
+    public function recordPayment(int $batchId, array $req, int $staffUserId): array
     {
         $batch = Database::one('SELECT * FROM application_batches WHERE id = ? AND deleted_at IS NULL', [$batchId]);
         if ($batch === null) {
@@ -196,7 +209,9 @@ final class StaffApplicationService
             throw HttpException::badRequest("no fee schedule found for this application's intake and training level");
         }
         $now = Database::now();
-        $id = Database::transaction(function () use ($batchId, $tier, $req, $now) {
+        $id = Database::transaction(function () use ($batchId, $tier, $req, $now, $staffUserId) {
+            $proofs = new PaymentProofService();
+            $proof = $proofs->requireSubmitted($batchId);
             $id = Database::insert('payments', [
                 'application_batch_id' => $batchId,
                 'amount'               => (float) $tier['application_fee'],
@@ -205,6 +220,7 @@ final class StaffApplicationService
                 'paid_at'              => $now,
             ]);
             Database::update('application_batches', $batchId, ['payment_status' => 'paid']);
+            $proofs->accept((int) $proof['id'], $staffUserId);
             return $id;
         });
         return [
@@ -410,7 +426,9 @@ final class StaffApplicationService
             $byApplicant[(int) $b['applicant_id']][] = $b;
         }
 
-        return array_map(function (array $b) use ($appsByBatch, $fees, $byApplicant) {
+        $proofs = (new PaymentProofService())->latestFor($batchIds, true);
+
+        return array_map(function (array $b) use ($appsByBatch, $fees, $byApplicant, $proofs) {
             $previous = [];
             foreach ($byApplicant[(int) $b['applicant_id']] ?? [] as $p) {
                 if ((int) $p['id'] !== (int) $b['id']) {
@@ -441,6 +459,9 @@ final class StaffApplicationService
                 'created_at'          => Format::dateTime($b['created_at']),
                 'updated_at'          => Format::dateTime($b['updated_at']),
             ];
+            if (isset($proofs[(int) $b['id']])) {
+                $response['payment_proof'] = $proofs[(int) $b['id']];
+            }
             // Fields Go leaves out when empty.
             if ($b['profile_photo'] !== '') {
                 $response['applicant_profile_photo'] = $b['profile_photo'];

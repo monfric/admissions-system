@@ -125,6 +125,21 @@ final class ApplicantPortalApplicationService
         return $this->buildResponses([$batch])[0];
     }
 
+    /** Uploads (or replaces) the proof of payment for one of the applicant's own unpaid applications. */
+    public function uploadPaymentProof(int $applicantId, int $batchId, ?array $file, string $transactionCode): array
+    {
+        $this->myApplication($applicantId, $batchId);
+        (new PaymentProofService())->upload($batchId, $file, $transactionCode, null);
+        return $this->myApplication($applicantId, $batchId);
+    }
+
+    /** Streams the applicant's own latest payment proof. */
+    public function paymentProofFile(int $applicantId, int $batchId): never
+    {
+        $this->myApplication($applicantId, $batchId);
+        (new PaymentProofService())->send($batchId);
+    }
+
     /** A staff-uploaded document, if it's available (and not locked) for this application. */
     public function document(int $applicantId, int $batchId, int $documentId): array
     {
@@ -337,6 +352,8 @@ final class ApplicantPortalApplicationService
             $feeByKey[$tier['intake_id'] . ':' . $tier['training_level_id']] = Format::float($tier['application_fee']);
         }
 
+        $proofs = (new PaymentProofService())->latestFor($batchIds, false);
+
         $responses = [];
         foreach ($batches as $b) {
             $id = (int) $b['id'];
@@ -364,6 +381,9 @@ final class ApplicantPortalApplicationService
                 'payment_status'      => $b['payment_status'],
                 'decision_status'     => $b['decision_status'],
             ];
+            if (isset($proofs[$id])) {
+                $response['payment_proof'] = $proofs[$id];
+            }
             if ($b['notified_at']) {
                 $response['notified_at'] = Format::dateTime($b['notified_at']);
                 // The whole of the last day counts (same as the recall job).
