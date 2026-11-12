@@ -1,0 +1,363 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Dashboard</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item active">Home</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <!-- Intake filter: every figure below follows it -->
+      <div class="row mb-3 align-items-end filter-row">
+        <div class="col-md-4 col-sm-6">
+          <label class="filter-label" for="dashboardIntake">Intake</label>
+          <select id="dashboardIntake" class="form-control form-control-sm"
+                  [(ngModel)]="intakeId" (ngModelChange)="onIntakeChange()" [disabled]="loading">
+            <option [ngValue]="0">All intakes</option>
+            <option *ngFor="let intake of stats?.intakes" [ngValue]="intake.id">
+              {{ intake.label }}{{ intake.is_active ? '' : ' (closed)' }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-8 col-sm-6 text-sm-right mt-2 mt-sm-0">
+          <small class="text-muted mr-2">Registered-applicant figures always cover all intakes.</small>
+          <button type="button" class="btn btn-default btn-sm" (click)="loadStats()" [disabled]="loading">
+            <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 1: headline cards -->
+      <div class="row mb-1">
+        <div class="col-lg-3 col-md-6 col-sm-6" *ngFor="let card of statCards">
+          <div class="small-box" [ngClass]="'bg-' + card.color">
+            <div class="inner">
+              <h3 style="font-size:1.4rem;">{{ card.value }}</h3>
+              <p style="font-size:.85rem;">{{ card.label }}</p>
+              <small class="stat-subtext">{{ card.subtext }}</small>
+            </div>
+            <div class="icon"><i [class]="card.icon"></i></div>
+            <a *ngIf="card.link; else noLink" [routerLink]="card.link" class="small-box-footer">
+              View <i class="fas fa-arrow-circle-right"></i>
+            </a>
+            <ng-template #noLink><span class="small-box-footer">&nbsp;</span></ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: pipeline + decision status -->
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Admissions Pipeline</h3>
+              <div class="card-tools"><small class="text-muted">{{ selectedIntakeLabel }}</small></div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="stats?.pipeline?.[0]?.count; else noData">
+                <div class="pipeline-stage" *ngFor="let s of pipeline">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="font-weight-bold">{{ s.stage }}</span>
+                    <span>
+                      <strong>{{ s.count | number }}</strong>
+                      <small class="text-muted ml-1" *ngIf="s.conversion !== null">({{ s.conversion }}% of previous)</small>
+                    </span>
+                  </div>
+                  <div class="progress pipeline-bar">
+                    <div class="progress-bar" role="progressbar" [style.width.%]="s.width"
+                         [attr.aria-valuenow]="s.count" [attr.aria-label]="s.stage + ': ' + s.count"></div>
+                  </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                  Each bar is relative to applications submitted; the percentage shows how many moved on from the stage before.
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-chart-pie mr-1"></i> Application Status</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box" *ngIf="hasData(decisionChart); else noData">
+                <canvas baseChart type="doughnut" [data]="decisionChart" [options]="donutOptions"
+                        aria-label="Applications by status"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: trends -->
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-chart-line mr-1"></i> Applications &amp; Payments — Last 30 Days</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box" *ngIf="hasData(trendChart); else noData">
+                <canvas baseChart type="line" [data]="trendChart" [options]="trendOptions"
+                        aria-label="Applications and payments per day, last 30 days"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-coins mr-1"></i> Fees Collected — Last 12 Months</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box chart-box-sm" *ngIf="hasData(feesChart); else noData">
+                <canvas baseChart type="bar" [data]="feesChart" [options]="feesOptions"
+                        aria-label="Fees collected per month, last 12 months"></canvas>
+              </div>
+              <table class="table table-sm mb-0 mt-3" *ngIf="stats?.payment_methods?.length">
+                <thead>
+                  <tr><th>Payment method</th><th class="text-right">Payments</th><th class="text-right">Amount (KES)</th></tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let m of stats?.payment_methods">
+                    <td>{{ m.method }}</td>
+                    <td class="text-right">{{ m.count | number }}</td>
+                    <td class="text-right">{{ m.amount | number:'1.0-0' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 4: demand by programme -->
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-graduation-cap mr-1"></i> Applications per Programme</h3>
+              <div class="card-tools"><small class="text-muted">Top {{ stats?.programmes?.length || 0 }} · hover for full name</small></div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="hasData(programmeChart); else noData"
+                   [style.height.px]="60 + (stats?.programmes?.length || 0) * 34">
+                <canvas baseChart type="bar" [data]="programmeChart" [options]="stackedRowOptions"
+                        aria-label="Applications per programme by choice"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-layer-group mr-1"></i> By Training Level</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box chart-box-sm" *ngIf="hasData(levelChart); else noData">
+                <canvas baseChart type="bar" [data]="levelChart" [options]="groupedBarOptions"
+                        aria-label="Applied, paid and approved per training level"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-university mr-1"></i> 1st Choices by Faculty</h3>
+            </div>
+            <div class="card-body">
+              <div *ngIf="hasData(facultyChart); else noData"
+                   [style.height.px]="40 + (stats?.faculties?.length || 0) * 34">
+                <canvas baseChart type="bar" [data]="facultyChart" [options]="rowBarOptions"
+                        aria-label="First-choice applications per faculty"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 5: applicant demographics -->
+      <div class="row">
+        <div class="col-lg-4 col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-venus-mars mr-1"></i> Gender</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box chart-box-sm" *ngIf="hasData(genderChart); else noData">
+                <canvas baseChart type="doughnut" [data]="genderChart" [options]="donutOptions"
+                        aria-label="Applicants by gender"></canvas>
+              </div>
+            </div>
+            <div class="card-footer" *ngIf="stats">
+              <i class="fas fa-wheelchair mr-1"></i>
+              <strong>{{ stats.demographics.with_disability | number }}</strong>
+              of {{ stats.demographics.applicants | number }} applicant(s) declared a disability
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-bed mr-1"></i> Mode of Residence</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-box chart-box-sm" *ngIf="hasData(residenceChart); else noData">
+                <canvas baseChart type="doughnut" [data]="residenceChart" [options]="donutOptions"
+                        aria-label="Applications by mode of residence"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-map-marker-alt mr-1"></i> Top Counties</h3>
+            </div>
+            <div class="card-body">
+              <div *ngIf="hasData(countyChart); else noData"
+                   [style.height.px]="40 + (stats?.demographics?.counties?.length || 0) * 28">
+                <canvas baseChart type="bar" [data]="countyChart" [options]="rowBarOptions"
+                        aria-label="Applicants per county, top 10"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 6: post-admission progress -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-tasks mr-1"></i> Post-Admission Progress</h3>
+          <div class="card-tools"><small class="text-muted">{{ stats?.post_admission?.admitted || 0 | number }} admitted student(s)</small></div>
+        </div>
+        <div class="card-body">
+          <div *ngIf="stats?.post_admission?.admitted; else noData" class="row">
+            <div class="col-md-4" *ngFor="let step of postAdmission">
+              <div class="d-flex justify-content-between mb-1">
+                <a [routerLink]="step.link" class="text-dark"><i [class]="step.icon + ' mr-1 text-muted'"></i>{{ step.label }}</a>
+              </div>
+              <div class="progress progress-sm mb-1">
+                <div class="progress-bar" role="progressbar" [style.width.%]="step.percent"
+                     [ngClass]="step.percent === 100 ? 'bg-success' : 'bg-primary'"
+                     [attr.aria-valuenow]="step.percent" aria-valuemin="0" aria-valuemax="100"
+                     [attr.aria-label]="step.label"></div>
+              </div>
+              <small class="text-muted">{{ step.done | number }} / {{ step.total | number }} ({{ step.percent }}%)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 7: action tables -->
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-1 text-warning"></i> Expiring Soon</h3>
+              <div class="card-tools">
+                <small class="text-muted mr-2">Notified, recalled automatically at the deadline</small>
+                <a routerLink="/notified-applications" class="btn btn-tool" title="Open Notified Applications"><i class="fas fa-external-link-alt"></i></a>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                  <thead>
+                    <tr><th>Applicant</th><th>App. No.</th><th>Level</th><th class="text-right">Days left</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let e of stats?.expiring">
+                      <td>{{ e.applicant_name }}<br><small class="text-muted">{{ e.phone_number }}</small></td>
+                      <td>{{ e.application_number }}</td>
+                      <td>{{ e.training_level }}</td>
+                      <td class="text-right">
+                        <span class="badge" [ngClass]="daysBadge(e.days_remaining)">
+                          {{ e.days_remaining <= 0 ? 'Last day' : e.days_remaining + ' day(s)' }}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr *ngIf="!stats?.expiring?.length">
+                      <td colspan="4" class="text-center text-muted py-3">
+                        <i class="fas fa-check-circle text-success mr-1"></i> No notified applications close to their deadline
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-history mr-1"></i> Recent Activity</h3>
+            </div>
+            <div class="card-body p-0">
+              <ul class="activity-list mb-0">
+                <li *ngFor="let a of stats?.recent_activity">
+                  <i class="activity-icon" [ngClass]="activityIcon(a.type)"></i>
+                  <div class="activity-body">
+                    <div><strong>{{ activityLabel(a.type) }}</strong> · {{ a.applicant_name }}</div>
+                    <small class="text-muted">{{ a.reference }} · {{ a.detail }}</small>
+                  </div>
+                  <small class="text-muted activity-time">{{ a.at | date:'d MMM, h:mm a' }}</small>
+                </li>
+                <li *ngIf="!stats?.recent_activity?.length" class="justify-content-center text-muted py-3">No activity yet</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admins only: staff activity -->
+      <div class="card" *ngIf="stats?.staff_activity">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user-shield mr-1"></i> Staff Activity</h3>
+          <div class="card-tools"><small class="text-muted">Approvals in {{ selectedIntakeLabel }} · visible to administrators only</small></div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead>
+                <tr><th>Name</th><th>Role</th><th>Status</th><th>Last login</th><th class="text-right">Approvals</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of stats?.staff_activity">
+                  <td>{{ u.full_name }}</td>
+                  <td>{{ u.role === 'admin' ? 'Administrator' : 'Admissions Officer' }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="u.is_active ? 'badge-success' : 'badge-secondary'">{{ u.is_active ? 'Active' : 'Inactive' }}</span>
+                  </td>
+                  <td>{{ u.last_login_at ? (u.last_login_at | date:'d MMM y, h:mm a') : 'Never' }}</td>
+                  <td class="text-right">{{ u.approvals | number }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<ng-template #noData>
+  <div class="no-data">
+    <i class="fas fa-chart-bar"></i>
+    <span>{{ loading ? 'Loading…' : 'No data yet' }}</span>
+  </div>
+</ng-template>

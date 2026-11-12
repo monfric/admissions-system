@@ -1,0 +1,123 @@
+<div class="dialog-shell" [formGroup]="documentForm">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas" [ngClass]="isEdit() ? 'fa-file-signature' : 'fa-file-upload'"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ title }}</h2>
+        <p class="dialog-subtitle" *ngIf="!isEdit()">Upload a PDF for a programme in an intake</p>
+        <p class="dialog-subtitle" *ngIf="isEdit() && data.document">{{ data.document.document_name }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+    <div class="row">
+
+      <div class="col-md-12 mb-3">
+        <label class="form-label req">Document Name</label>
+        <input type="text" class="form-control" formControlName="document_name"
+               placeholder="e.g. Provisional Admission Letter"
+               [class.is-invalid]="fieldError('document_name')">
+        <div class="invalid-feedback" *ngIf="fieldError('document_name')">{{ fieldError('document_name') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Intake</label>
+        <select class="form-control" formControlName="intake_id" (change)="onIntakeChange()"
+                [class.is-invalid]="fieldError('intake_id')">
+          <option [ngValue]="null">— Select Intake —</option>
+          <option *ngFor="let intake of intakes" [ngValue]="intake.id">
+            {{ intake.intake_month }} {{ intake.intake_year }}
+          </option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('intake_id')">{{ fieldError('intake_id') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Programme</label>
+        <select class="form-control" formControlName="programme_id"
+                [class.is-invalid]="fieldError('programme_id')">
+          <option [ngValue]="null">
+            {{ !documentForm.get('intake_id')?.value ? '— Select an intake first —'
+               : loadingProgrammes ? 'Loading…'
+               : programmes.length === 0 ? '— No programmes in this intake —'
+               : '— Select Programme —' }}
+          </option>
+          <option *ngFor="let p of programmes" [ngValue]="p.programme_id">
+            {{ p.programme_name }} ({{ p.programme_code }})
+          </option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('programme_id')">{{ fieldError('programme_id') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Type</label>
+        <select class="form-control" formControlName="type" [class.is-invalid]="fieldError('type')">
+          <option value="">— Select Type —</option>
+          <option value="provisional">Provisional</option>
+          <option value="admission">Admission</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('type')">{{ fieldError('type') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Status</label>
+        <div>
+          <button type="button" class="status-toggle-btn"
+                  [class.is-active]="documentForm.get('is_active')?.value"
+                  (click)="toggleActive()">
+            <i class="fas" [ngClass]="documentForm.get('is_active')?.value ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+            {{ documentForm.get('is_active')?.value ? 'Active' : 'Inactive' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="col-md-12 mb-1">
+        <label class="form-label" [class.req]="!isEdit()">{{ isEdit() ? 'Replace File (Optional)' : 'File' }}</label>
+        <input type="file" class="form-control file-input" accept="application/pdf,.pdf"
+               (change)="onFileSelected($event)" [class.is-invalid]="fileError">
+        <small class="text-muted d-block mt-1" *ngIf="!fileError">
+          <ng-container *ngIf="selectedFile">{{ selectedFile.name }} ({{ formatSize(selectedFile.size) }})</ng-container>
+          <ng-container *ngIf="!selectedFile && isEdit() && data.document">
+            Current: {{ data.document.file_name }} ({{ formatSize(data.document.file_size) }})
+          </ng-container>
+          <ng-container *ngIf="!selectedFile && !isEdit()">PDF only, up to 10MB.</ng-container>
+        </small>
+        <div class="invalid-feedback d-block" *ngIf="fileError">{{ fileError }}</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-save" (click)="save()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas mr-1" [ngClass]="isEdit() ? 'fa-save' : 'fa-upload'"></i>
+        {{ isEdit() ? 'Save Changes' : 'Upload Document' }}
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Saving&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

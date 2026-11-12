@@ -1,0 +1,178 @@
+<div class="training-level-dialog">
+  <!-- Dialog Header -->
+  <h2 mat-dialog-title class="dialog-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">{{ dialogIcon }}</mat-icon>
+      <span class="header-title">{{ dialogTitle }}</span>
+    </div>
+    <button 
+      mat-icon-button 
+      mat-dialog-close 
+      class="close-btn"
+      type="button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </h2>
+
+  <!-- Dialog Content -->
+  <mat-dialog-content class="dialog-content">
+    <form [formGroup]="trainingLevelForm" class="training-level-form">
+      
+      <!-- Training Level Name -->
+      <div class="form-group">
+        <label class="form-label required">Training Level Name</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input 
+            matInput 
+            formControlName="name" 
+            placeholder="e.g., Higher Diploma"
+            maxlength="100"
+            required>
+          <mat-icon matPrefix>layers</mat-icon>
+          <mat-error *ngIf="hasError('name')">
+            {{ getErrorMessage('name') }}
+          </mat-error>
+          <mat-hint align="end">
+            {{ trainingLevelForm.get('name')?.value?.length || 0 }}/100
+          </mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Training Level Code -->
+      <div class="form-group">
+        <label class="form-label required">Training Level Code</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input 
+            matInput 
+            formControlName="code" 
+            placeholder="e.g., HD"
+            maxlength="20"
+            style="text-transform: uppercase"
+            required>
+          <mat-icon matPrefix>tag</mat-icon>
+          <mat-error *ngIf="hasError('code')">
+            {{ getErrorMessage('code') }}
+          </mat-error>
+          <mat-hint align="end">
+            {{ trainingLevelForm.get('code')?.value?.length || 0 }}/20
+          </mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Order -->
+      <div class="form-group">
+        <label class="form-label required">Display Order</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input 
+            matInput 
+            type="number"
+            formControlName="order" 
+            placeholder="e.g., 1"
+            min="1"
+            max="99"
+            required>
+          <mat-icon matPrefix>sort</mat-icon>
+          <mat-error *ngIf="hasError('order')">
+            {{ getErrorMessage('order') }}
+          </mat-error>
+          <mat-hint>Lower numbers appear first (1 = Certificate, 2 = Diploma, etc.)</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea 
+            matInput 
+            formControlName="description" 
+            placeholder="Brief description of the training level"
+            maxlength="500"
+            rows="4"
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="4"
+            cdkAutosizeMaxRows="8">
+          </textarea>
+          <mat-icon matPrefix>description</mat-icon>
+          <mat-error *ngIf="hasError('description')">
+            {{ getErrorMessage('description') }}
+          </mat-error>
+          <mat-hint align="end">
+            {{ trainingLevelForm.get('description')?.value?.length || 0 }}/500
+          </mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Active Status -->
+      <div class="form-group">
+        <div class="status-toggle">
+          <mat-slide-toggle 
+            formControlName="is_active"
+            color="primary"
+            [disabled]="isViewMode">
+            <div class="toggle-content">
+              <mat-icon class="toggle-icon" [class.active]="trainingLevelForm.get('is_active')?.value">
+                {{ trainingLevelForm.get('is_active')?.value ? 'check_circle' : 'cancel' }}
+              </mat-icon>
+              <div class="toggle-text">
+                <strong>{{ trainingLevelForm.get('is_active')?.value ? 'Active' : 'Inactive' }}</strong>
+                <small>{{ trainingLevelForm.get('is_active')?.value ? 
+                   'Training level is active and visible in the system' : 
+                   'Training level is inactive and hidden from users' }}</small>
+              </div>
+            </div>
+          </mat-slide-toggle>
+        </div>
+      </div>
+
+      <!-- View Mode Additional Info -->
+      <div class="info-section" *ngIf="isViewMode && data.trainingLevel">
+        <mat-divider class="my-3"></mat-divider>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="info-item">
+              <label class="info-label">
+                <mat-icon>event</mat-icon>
+                Created At
+              </label>
+              <p class="info-value">{{ data.trainingLevel.created_at | date:'full' }}</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="info-item">
+              <label class="info-label">
+                <mat-icon>update</mat-icon>
+                Last Updated
+              </label>
+              <p class="info-value">{{ data.trainingLevel.updated_at | date:'full' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <!-- Dialog Actions -->
+  <mat-dialog-actions class="dialog-actions">
+    <button 
+      mat-stroked-button 
+      type="button"
+      (click)="onCancel()"
+      class="btn-cancel">
+      <mat-icon>{{ isViewMode ? 'close' : 'cancel' }}</mat-icon>
+      {{ isViewMode ? 'Close' : 'Cancel' }}
+    </button>
+    
+    <button 
+      mat-raised-button 
+      color="primary"
+      type="button"
+      (click)="onSubmit()"
+      [disabled]="!trainingLevelForm.valid || isViewMode"
+      *ngIf="!isViewMode"
+      class="btn-submit">
+      <mat-icon>{{ mode === 'create' ? 'add' : 'save' }}</mat-icon>
+      {{ mode === 'create' ? 'Create Training Level' : 'Save Changes' }}
+    </button>
+  </mat-dialog-actions>
+</div>

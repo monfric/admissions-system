@@ -1,0 +1,74 @@
+<div class="row filter-row">
+  <div class="col-xl col-md-4 col-sm-6 mb-2">
+    <label class="filter-label">Intake</label>
+    <select class="form-control form-control-sm" [(ngModel)]="intakeId" (ngModelChange)="onIntakeChange()">
+      <option [ngValue]="null">All</option>
+      <option *ngFor="let i of intakes" [ngValue]="i.id">{{ i.intake_month }} {{ i.intake_year }}</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2">
+    <label class="filter-label">Training Level</label>
+    <select class="form-control form-control-sm" [(ngModel)]="trainingLevelId" (ngModelChange)="onChange()">
+      <option [ngValue]="null">All</option>
+      <option *ngFor="let t of trainingLevels" [ngValue]="t.id">{{ t.name }}</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2">
+    <label class="filter-label">{{ programmeLabel || { any: 'Programme', notified: 'Programme Notified', recalled: 'Programme Recalled' }[programmeMatch] }}</label>
+    <select class="form-control form-control-sm" [(ngModel)]="programmeId" (ngModelChange)="onChange()">
+      <option [ngValue]="null">All</option>
+      <option *ngFor="let p of programmes" [ngValue]="p.id">{{ p.name }} ({{ p.code }})</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="showGender">
+    <label class="filter-label">Gender</label>
+    <select class="form-control form-control-sm" [(ngModel)]="gender" (ngModelChange)="onChange()">
+      <option value="">All</option>
+      <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="showResidence">
+    <label class="filter-label">Residence</label>
+    <select class="form-control form-control-sm" [(ngModel)]="residence" (ngModelChange)="onChange()">
+      <option value="">All</option>
+      <option *ngFor="let r of residenceOptions" [value]="r">{{ r }}</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="dateFilter !== 'none'">
+    <label class="filter-label">{{ lastFilterLabel }}</label>
+    <select class="form-control form-control-sm" [(ngModel)]="applied" (ngModelChange)="onChange()">
+      <option value="">{{ lastFilterAllLabel }}</option>
+      <option *ngFor="let a of lastFilterOptions" [value]="a.value">{{ a.label }}</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="showLetterType">
+    <label class="filter-label">{{ letterTypeLabel }}</label>
+    <select class="form-control form-control-sm" [(ngModel)]="letterType" (ngModelChange)="onChange()">
+      <option value="">All</option>
+      <option value="provisional">Provisional</option>
+      <option value="admission">Admission</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="showStatus">
+    <label class="filter-label">Status</label>
+    <select class="form-control form-control-sm" [(ngModel)]="status" (ngModelChange)="onChange()">
+      <option value="">All</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+  <div class="col-xl col-md-4 col-sm-6 mb-2" *ngIf="showMeasurement">
+    <label class="filter-label">Measurements</label>
+    <select class="form-control form-control-sm" [(ngModel)]="measurement" (ngModelChange)="onChange()">
+      <option value="">All</option>
+      <option value="submitted">Submitted</option>
+      <option value="pending">Pending</option>
+      <option value="unlocked">Unlocked</option>
+    </select>
+  </div>
+  <div class="col-12" *ngIf="hasActiveFilters">
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clear()">
+      <i class="fas fa-times mr-1"></i>Clear filters
+    </button>
+  </div>
+</div>

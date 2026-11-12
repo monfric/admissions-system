@@ -1,0 +1,169 @@
+body {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('../../../../assets/dist/img/m5.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* Overlay for fade effect */
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.4) 0%, rgba(93, 156, 249, 0.5) 100%);
+  z-index: 0;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-width: 400px;
+  width: 90%;
+  padding: 2rem;
+  transition: transform 0.3s ease;
+  margin: auto;
+  backdrop-filter: blur(10px);
+}
+
+.login-card:hover {
+  transform: translateY(-5px);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-icon {
+ // background: #0c7540;
+ // width: 100px;
+  height: 70px;
+ // border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.login-icon i {
+  font-size: 2rem;
+  color: white;
+}
+
+.form-floating {
+  margin-bottom: 1rem;
+}
+
+.form-control:focus {
+  border-color: #2ca0ee;
+  box-shadow: 0 0 0 0.25rem rgba(183, 185, 183, 0.25);
+}
+
+.btn-login {
+  background: #b61482;
+  border: none;
+  padding: 0.8rem;
+  font-weight: 500;
+  width: 100%;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+  background: #2ca0ee;
+  transform: translateY(-2px);
+}
+
+.social-login {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5rem;
+  color: white;
+  transition: transform 0.3s ease;
+}
+
+.social-btn:hover {
+  transform: scale(1.1);
+}
+
+.facebook { background: #3b5998; }
+.google { background: #db4437; }
+.twitter { background: #1da1f2; }
+
+.register-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+/* Glass morphism effect for form elements */
+.form-control {
+  background: rgba(255, 255, 255, 0.9);
+  //border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.error {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 5px;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+}
+
+
+.hold-transition{
+    width: 100%;
+  }
+  .mileage-heading{
+    color: #2ca0ee;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  .loading-part{
+    text-align: center;
+  }
+
+  h3{
+    font-size: large;
+  }
+// Eye button that shows/hides the password (styled like the field's icon box).
+.password-toggle {
+  cursor: pointer;
+  height: 100%;
+
+  &:focus-visible {
+    outline: 2px solid #003361;
+    outline-offset: -2px;
+  }
+}

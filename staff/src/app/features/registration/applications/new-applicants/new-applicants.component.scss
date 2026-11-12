@@ -1,0 +1,18 @@
+
+// Card subtext (e.g. "4 male · 3 female"): full strength, slightly bolder, in
+// the card's own text colour (dark on the orange card, white on the others).
+.stat-subtext {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  opacity: .95;
+}
+
+// Dropdown filters above the table.
+.filter-row .filter-label {
+  display: block;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 2px;
+}

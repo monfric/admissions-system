@@ -1,0 +1,95 @@
+<div class="dialog-shell" [formGroup]="form">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas" [ngClass]="isEdit ? 'fa-user-edit' : 'fa-user-plus'"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ isEdit ? 'Edit Staff User' : 'Add Staff User' }}</h2>
+        <p class="dialog-subtitle">{{ isEdit ? data.user?.email : 'Staff can use the whole Applications module' }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+    <div class="row">
+      <div class="col-sm-6 form-group">
+        <label class="form-label req">First Name</label>
+        <input type="text" class="form-control" formControlName="first_name" [class.is-invalid]="fieldError('first_name')">
+        <div class="invalid-feedback" *ngIf="fieldError('first_name')">{{ fieldError('first_name') }}</div>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="form-label req">Last Name</label>
+        <input type="text" class="form-control" formControlName="last_name" [class.is-invalid]="fieldError('last_name')">
+        <div class="invalid-feedback" *ngIf="fieldError('last_name')">{{ fieldError('last_name') }}</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label req">Email</label>
+      <input type="email" class="form-control" formControlName="email" [class.is-invalid]="fieldError('email')">
+      <div class="invalid-feedback" *ngIf="fieldError('email')">{{ fieldError('email') }}</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="text" class="form-control" formControlName="phone_number" appDigitsOnly [class.is-invalid]="fieldError('phone_number')">
+      <div class="invalid-feedback" *ngIf="fieldError('phone_number')">{{ fieldError('phone_number') }}</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" [class.req]="!isEdit">{{ isEdit ? 'New Password' : 'Password' }}</label>
+      <input type="password" class="form-control" formControlName="password" autocomplete="new-password"
+             [class.is-invalid]="fieldError('password')">
+      <div class="invalid-feedback" *ngIf="fieldError('password')">{{ fieldError('password') }}</div>
+      <small class="text-muted d-block mt-1" *ngIf="isEdit">Leave blank to keep the current password.</small>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-6 form-group">
+        <label class="form-label">Role</label>
+        <div>
+          <button type="button" class="status-toggle-btn" [class.on]="isAdminRole" (click)="toggleRole()">
+            <i class="fas" [ngClass]="isAdminRole ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+            {{ isAdminRole ? 'Administrator' : 'Staff' }}
+          </button>
+        </div>
+        <small class="text-muted d-block mt-1">Administrators can also manage staff users.</small>
+      </div>
+      <div class="col-sm-6 form-group">
+        <label class="form-label">Status</label>
+        <div>
+          <button type="button" class="status-toggle-btn" [class.on]="form.get('is_active')?.value" (click)="toggleActive()">
+            <i class="fas" [ngClass]="form.get('is_active')?.value ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+            {{ form.get('is_active')?.value ? 'Active' : 'Inactive' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-save" (click)="save()" [disabled]="submitting">
+      <span *ngIf="!submitting"><i class="fas fa-save mr-1"></i>{{ isEdit ? 'Save Changes' : 'Add User' }}</span>
+      <span *ngIf="submitting"><i class="fas fa-spinner fa-spin mr-1"></i>Saving&hellip;</span>
+    </button>
+  </div>
+
+</div>

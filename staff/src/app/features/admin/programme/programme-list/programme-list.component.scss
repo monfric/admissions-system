@@ -1,0 +1,314 @@
+// AdminLTE compatible styles
+.content-wrapper {
+  .content-header {
+    .btn-add {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .content {
+    // Filter Card Enhancements
+    .card-outline.card-primary {
+      border-top: 3px solid #007bff;
+
+      .card-header {
+        background-color: transparent;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+
+        .card-title {
+          font-weight: 600;
+          
+          i {
+            margin-right: 8px;
+          }
+        }
+      }
+
+      .card-body {
+        .w-100 {
+          width: 100% !important;
+        }
+
+        .btn-group {
+          display: flex;
+          gap: 8px;
+
+          button {
+            flex: 1;
+            
+            mat-icon {
+              margin-right: 4px;
+            }
+          }
+        }
+      }
+    }
+
+    // Table Card Enhancements
+    .card {
+      box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+
+      .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+
+        .card-title {
+          font-weight: 600;
+          font-size: 1.1rem;
+
+          i {
+            margin-right: 8px;
+          }
+        }
+
+        .card-tools {
+          .badge {
+            font-size: 0.875rem;
+            padding: 0.35em 0.65em;
+          }
+        }
+      }
+
+      .card-body {
+        // Loading State
+        .text-center.p-5 {
+          padding: 3rem !important;
+
+          .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+          }
+
+          .mt-3 {
+            margin-top: 1rem;
+          }
+        }
+
+        // Table Responsive
+        .table-responsive {
+          .table {
+            margin-bottom: 0;
+
+            th {
+              background-color: #f8f9fa;
+              font-weight: 600;
+              text-transform: uppercase;
+              font-size: 0.75rem;
+              letter-spacing: 0.5px;
+              border-bottom: 2px solid #dee2e6;
+              padding: 12px;
+            }
+
+            td {
+              vertical-align: middle;
+              padding: 12px;
+
+              // Badge Styles
+              .badge {
+                font-size: 0.75rem;
+                padding: 0.35em 0.65em;
+                font-weight: 600;
+
+                i {
+                  margin-right: 4px;
+                }
+
+                &.badge-primary {
+                  background-color: #007bff;
+                  color: white;
+                }
+
+                &.badge-info {
+                  background-color: #17a2b8;
+                  color: white;
+                }
+
+                &.badge-secondary {
+                  background-color: #6c757d;
+                  color: white;
+                }
+
+                &.badge-dark {
+                  background-color: #343a40;
+                  color: white;
+                }
+
+                &.badge-success {
+                  background-color: #28a745;
+                  color: white;
+                }
+
+                &.badge-danger {
+                  background-color: #dc3545;
+                  color: white;
+                }
+              }
+
+              strong {
+                color: #343a40;
+                font-weight: 600;
+              }
+
+              small {
+                font-size: 0.875rem;
+
+                i {
+                  margin-right: 4px;
+                }
+              }
+            }
+
+            // Table Hover
+            tbody tr:hover {
+              background-color: #f8f9fa;
+            }
+
+            // Empty State
+            .empty-state {
+              padding: 3rem 1rem;
+
+              i {
+                opacity: 0.3;
+              }
+
+              h5 {
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                color: #343a40;
+              }
+
+              p {
+                margin-bottom: 1.5rem;
+              }
+
+              button {
+                mat-icon {
+                  margin-right: 8px;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .card-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid rgba(0,0,0,.125);
+
+        ::ng-deep .mat-mdc-paginator {
+          background-color: transparent;
+        }
+      }
+    }
+  }
+}
+
+// Material Form Field Overrides
+::ng-deep {
+  .mat-mdc-form-field {
+    margin-bottom: 0 !important;
+
+    .mat-mdc-text-field-wrapper {
+      background-color: white;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  // Menu Styles
+  .mat-mdc-menu-panel {
+    min-width: 200px;
+
+    .mat-mdc-menu-item {
+      min-height: 40px;
+
+      mat-icon {
+        margin-right: 12px;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+
+        &.text-info {
+          color: #17a2b8;
+        }
+
+        &.text-primary {
+          color: #007bff;
+        }
+
+        &.text-warning {
+          color: #ffc107;
+        }
+
+        &.text-danger {
+          color: #dc3545;
+        }
+      }
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+    }
+  }
+
+  // Snackbar Styles
+  .snackbar-success {
+    .mdc-snackbar__surface {
+      background-color: #28a745 !important;
+    }
+  }
+
+  .snackbar-error {
+    .mdc-snackbar__surface {
+      background-color: #dc3545 !important;
+    }
+  }
+
+  .snackbar-info {
+    .mdc-snackbar__surface {
+      background-color: #17a2b8 !important;
+    }
+  }
+}
+
+// Utility Classes
+.w-100 {
+  width: 100% !important;
+}
+
+.flex-fill {
+  flex: 1 1 auto !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.p-5 {
+  padding: 3rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}

@@ -1,0 +1,107 @@
+<div class="dialog-shell" [formGroup]="letterForm">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas" [ngClass]="isView() ? 'fa-file-alt' : isEdit() ? 'fa-file-signature' : 'fa-file-medical'"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ title }}</h2>
+        <p class="dialog-subtitle" *ngIf="isCreate()">Create a new provisional or admission letter</p>
+        <p class="dialog-subtitle" *ngIf="!isCreate() && data.offerLetter">
+          {{ data.offerLetter.programme_name }} &middot; {{ data.offerLetter.intake_name }}
+        </p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+    <div class="row">
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Intake</label>
+        <select class="form-control" formControlName="intake_id" [class.is-invalid]="fieldError('intake_id')"
+                (change)="onIntakeChange()">
+          <option [ngValue]="null">— Select Intake —</option>
+          <option *ngFor="let i of intakes" [ngValue]="i.id">{{ i.intake_month }} {{ i.intake_year }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('intake_id')">{{ fieldError('intake_id') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Programme</label>
+        <select class="form-control" formControlName="intake_programme_id" [class.is-invalid]="fieldError('intake_programme_id')">
+          <option [ngValue]="null">— Select Programme —</option>
+          <option *ngFor="let p of programmes" [ngValue]="p.id">{{ p.programme_name }} ({{ p.programme_code }})</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('intake_programme_id')">{{ fieldError('intake_programme_id') }}</div>
+        <small class="text-muted" *ngIf="!loadingProgrammes && letterForm.get('intake_id')?.value && programmes.length === 0">
+          No programmes found for the selected intake.
+        </small>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Letter Type</label>
+        <select class="form-control" formControlName="type" [class.is-invalid]="fieldError('type')">
+          <option value="">— Select Type —</option>
+          <option *ngFor="let t of types" [value]="t.value">{{ t.label }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('type')">{{ fieldError('type') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3" *ngIf="!isCreate()">
+        <div class="toggle-row">
+          <label class="toggle-item">
+            <span class="toggle-label">Active</span>
+            <span class="toggle-desc">Inactive letters are kept on record but not used</span>
+            <div class="custom-toggle">
+              <input type="checkbox" formControlName="is_active">
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="col-md-12 mb-3">
+        <label class="form-label req">Letter Body</label>
+        <app-rich-text-editor formControlName="body" [invalid]="!!fieldError('body')"
+                              placeholder="Write the letter content here..."></app-rich-text-editor>
+        <div class="invalid-feedback d-block" *ngIf="fieldError('body')">{{ fieldError('body') }}</div>
+        <small class="text-muted d-block mt-1" *ngIf="!isView()">
+          The letterhead, reference, date, applicant's name, "RE:" title and the Principal's sign-off are added
+          automatically &mdash; write only the body of the letter.
+        </small>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">{{ isView() ? 'Close' : 'Cancel' }}</button>
+    <button type="button" class="btn-save" *ngIf="!isView()" (click)="save()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas mr-1" [ngClass]="isEdit() ? 'fa-save' : 'fa-plus'"></i>
+        {{ isEdit() ? 'Save Changes' : 'Add Letter' }}
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Saving&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

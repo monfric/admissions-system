@@ -1,0 +1,16 @@
+// Card subtext (e.g. "25 paid · 13 unpaid"), same as the other Registration pages.
+.stat-subtext {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  opacity: .95;
+}
+
+// Intake filter label, same look as the other Registration filters.
+.filter-label {
+  display: block;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 2px;
+}

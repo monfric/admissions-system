@@ -1,0 +1,160 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Email Log</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item active">Email Log</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <div class="alert alert-warning" *ngIf="stats?.driver === 'log'">
+        <i class="fas fa-info-circle mr-1"></i>
+        Emails are <strong>not being sent</strong>: the server is set to write them to a log file
+        (<code>mail.driver = 'log'</code> in the API's <code>app/config.php</code>). Set it to <code>'smtp'</code>
+        and add the Gmail App Password to send for real.
+      </div>
+
+      <!-- Statistics -->
+      <div class="row mb-1">
+        <div class="col-lg-3 col-md-6 col-sm-6" *ngFor="let card of statCards">
+          <div class="small-box" [ngClass]="'bg-' + card.color">
+            <div class="inner">
+              <h3 style="font-size:1.4rem;">{{ card.value }}</h3>
+              <p style="font-size:.85rem;">{{ card.label }}</p>
+              <small class="stat-subtext">{{ card.subtext }}</small>
+            </div>
+            <div class="icon"><i [class]="card.icon"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">All Emails</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-default btn-sm" (click)="refresh()" [disabled]="loading">
+              <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search and Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search by recipient or subject..."
+                       [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+                <div class="input-group-append">
+                  <button class="btn btn-default" type="button" (click)="onSearch()" aria-label="Search"><i class="fas fa-search"></i></button>
+                  <button class="btn btn-default" type="button" (click)="clearSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-7 d-flex flex-wrap justify-content-md-end align-items-center mt-2 mt-md-0">
+              <div class="btn-group btn-group-sm mr-3 mb-1">
+                <button type="button" class="btn" [ngClass]="statusFilter === '' ? 'btn-primary' : 'btn-default'" (click)="setStatusFilter('')">All</button>
+                <button type="button" class="btn" [ngClass]="statusFilter === 'sent' ? 'btn-primary' : 'btn-default'" (click)="setStatusFilter('sent')">Sent</button>
+                <button type="button" class="btn" [ngClass]="statusFilter === 'pending' ? 'btn-primary' : 'btn-default'" (click)="setStatusFilter('pending')">Waiting</button>
+                <button type="button" class="btn" [ngClass]="statusFilter === 'failed' ? 'btn-primary' : 'btn-default'" (click)="setStatusFilter('failed')">Failed</button>
+              </div>
+              <label class="text-muted small mb-0 mr-2">Per page:</label>
+              <select class="form-control form-control-sm" style="width: auto;" [(ngModel)]="pageSize" (ngModelChange)="changePageSize($event)">
+                <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Emails Table -->
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Created</th>
+                  <th>Recipient</th>
+                  <th>Type</th>
+                  <th>Subject</th>
+                  <th style="width: 110px">Status</th>
+                  <th style="width: 140px" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="7" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Loading emails&hellip;</td>
+                </tr>
+                <tr *ngIf="!loading && emails.length === 0">
+                  <td colspan="7" class="text-center py-4 text-muted">No emails found.</td>
+                </tr>
+                <ng-container *ngFor="let email of emails; let i = index">
+                  <tr [class.table-active]="preview?.id === email.id">
+                    <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                    <td class="text-nowrap">{{ email.created_at | date:'MMM d, y, h:mm a' }}</td>
+                    <td>{{ email.to_name || '—' }}<br><small class="text-muted">{{ email.to_email }}</small></td>
+                    <td>{{ templateLabel(email.template) }}</td>
+                    <td>{{ email.subject }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'badge-success': email.status === 'sent',
+                        'badge-info': email.status === 'pending',
+                        'badge-danger': email.status === 'failed'
+                      }">{{ email.status === 'pending' ? 'Waiting' : (email.status | titlecase) }}</span>
+                      <small class="d-block text-muted" *ngIf="email.sent_at">{{ email.sent_at | date:'MMM d, h:mm a' }}</small>
+                      <small class="d-block text-danger error-text" *ngIf="email.last_error" [title]="email.last_error">
+                        {{ email.attempts }} tr{{ email.attempts === 1 ? 'y' : 'ies' }}: {{ email.last_error }}
+                      </small>
+                    </td>
+                    <td class="text-center text-nowrap">
+                      <button type="button" class="btn btn-sm btn-default mr-1" (click)="openPreview(email)"
+                              [attr.aria-expanded]="preview?.id === email.id" title="View email">
+                        <i class="fas" [ngClass]="preview?.id === email.id ? 'fa-eye-slash' : 'fa-eye'"></i>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-primary" *ngIf="canResend(email)"
+                              (click)="resend(email)" [disabled]="resendingId === email.id" title="Send again">
+                        <i class="fas fa-redo" [class.fa-spin]="resendingId === email.id"></i> Resend
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="preview?.id === email.id" class="preview-row">
+                    <td colspan="7">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>{{ preview!.subject }}</strong>
+                        <button type="button" class="btn btn-sm btn-tool" (click)="closePreview()" aria-label="Close preview"><i class="fas fa-times"></i></button>
+                      </div>
+                      <iframe class="email-preview" sandbox="" [srcdoc]="previewHtml" title="Email preview"></iframe>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+
+          <app-pagination
+            *ngIf="!loading && emails.length > 0"
+            [currentPage]="page"
+            [pageSize]="pageSize"
+            [totalItems]="totalItems"
+            [totalPages]="totalPages"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>

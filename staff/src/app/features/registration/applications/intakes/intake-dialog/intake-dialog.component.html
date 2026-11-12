@@ -1,0 +1,82 @@
+<div class="dialog-shell" [formGroup]="intakeForm">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas" [ngClass]="isView() ? 'fa-calendar-check' : isEdit() ? 'fa-calendar-alt' : 'fa-calendar-plus'"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ title }}</h2>
+        <p class="dialog-subtitle" *ngIf="isCreate()">Add a new admission intake period</p>
+        <p class="dialog-subtitle" *ngIf="!isCreate() && data.intake">
+          {{ data.intake.intake_month }} {{ data.intake.intake_year }}
+        </p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+    <div class="row">
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Intake Month</label>
+        <select class="form-control" formControlName="intake_month" [class.is-invalid]="fieldError('intake_month')">
+          <option value="">— Select Month —</option>
+          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('intake_month')">{{ fieldError('intake_month') }}</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label req">Intake Year</label>
+        <select class="form-control" formControlName="intake_year" [class.is-invalid]="fieldError('intake_year')">
+          <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="fieldError('intake_year')">{{ fieldError('intake_year') }}</div>
+      </div>
+
+      <div class="col-md-12 mb-3" *ngIf="!isCreate()">
+        <div class="toggle-row">
+          <label class="toggle-item">
+            <span class="toggle-label">Active</span>
+            <span class="toggle-desc">Applicants can be assigned to this intake while it's active</span>
+            <div class="custom-toggle">
+              <input type="checkbox" formControlName="is_active">
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">{{ isView() ? 'Close' : 'Cancel' }}</button>
+    <button type="button" class="btn-save" *ngIf="!isView()" (click)="save()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas mr-1" [ngClass]="isEdit() ? 'fa-save' : 'fa-plus'"></i>
+        {{ isEdit() ? 'Save Changes' : 'Add Intake' }}
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Saving&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

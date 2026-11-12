@@ -1,0 +1,198 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Application Document Management</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item active">App Documents</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+
+      <!-- Statistics -->
+      <div class="row mb-1">
+        <div class="col-md-4" *ngFor="let card of statCards">
+          <div class="small-box" [ngClass]="'bg-' + card.color">
+            <div class="inner">
+              <h3 style="font-size:1.4rem;">{{ card.value }}</h3>
+              <p style="font-size:.85rem;">{{ card.label }}</p>
+              <small class="stat-subtext">{{ card.subtext }}</small>
+            </div>
+            <div class="icon"><i [class]="card.icon"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">All Application Documents</h3>
+          <div class="card-tools">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              (click)="addDocument()">
+              <i class="fas fa-plus"></i> Add New Document
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search and Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search document..."
+                  [(ngModel)]="searchTerm"
+                  (keyup.enter)="onSearch()">
+                <div class="input-group-append">
+                  <button class="btn btn-default" type="button" (click)="onSearch()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    type="button"
+                    (click)="clearSearch()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mt-2 mt-md-0">
+              <div class="btn-group" role="group">
+                <button
+                  type="button"
+                  class="btn"
+                  [ngClass]="statusFilter === '' ? 'btn-primary' : 'btn-outline-primary'"
+                  (click)="setStatusFilter('')">
+                  All
+                </button>
+                <button
+                  type="button"
+                  class="btn"
+                  [ngClass]="statusFilter === 'active' ? 'btn-success' : 'btn-outline-success'"
+                  (click)="setStatusFilter('active')">
+                  Active
+                </button>
+                <button
+                  type="button"
+                  class="btn"
+                  [ngClass]="statusFilter === 'inactive' ? 'btn-danger' : 'btn-outline-danger'"
+                  (click)="setStatusFilter('inactive')">
+                  Inactive
+                </button>
+              </div>
+            </div>
+
+            <div class="col-md-4 d-flex justify-content-md-end align-items-center mt-2 mt-md-0">
+              <label class="text-muted small mb-0 mr-2">Per page:</label>
+              <select
+                class="form-control form-control-sm"
+                style="width: auto;"
+                [(ngModel)]="pageSize"
+                (ngModelChange)="changePageSize($event)">
+                <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- Dropdown Filters -->
+          <app-application-filters class="d-block mb-3" dateFilter="none" [showGender]="false" [showLetterType]="true"
+                                   letterTypeLabel="Document Type" (filtersChange)="onFiltersChange($event)"></app-application-filters>
+
+          <!-- Application Documents Table -->
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Document Name</th>
+                  <th>File Name</th>
+                  <th>Intake</th>
+                  <th>Programme</th>
+                  <th>Type</th>
+                  <th style="width: 100px">Status</th>
+                  <th style="width: 110px">Created</th>
+                  <th style="width: 70px" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="9" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Loading documents&hellip;
+                  </td>
+                </tr>
+                <tr *ngIf="!loading && documents.length === 0">
+                  <td colspan="9" class="text-center py-4 text-muted">No application documents found.</td>
+                </tr>
+                <tr *ngFor="let doc of documents; let i = index">
+                  <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                  <td>{{ doc.document_name }}</td>
+                  <td>
+                    <i class="fas fa-file-pdf text-danger mr-1"></i>{{ doc.file_name }}
+                  </td>
+                  <td>{{ doc.intake_name }}</td>
+                  <td>{{ doc.programme_name }}</td>
+                  <td>{{ doc.type | titlecase }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="doc.status === 'active' ? 'badge-success' : 'badge-secondary'">
+                      {{ doc.status | titlecase }}
+                    </span>
+                  </td>
+                  <td>{{ doc.created_at | date:'MMM d, y' }}</td>
+                  <td class="text-center position-relative" (click)="$event.stopPropagation()">
+                    <button class="btn btn-sm btn-tool" (click)="toggleMenu(doc.id, $event)">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right show position-absolute"
+                         *ngIf="openMenuId === doc.id"
+                         style="top:100%;right:0;z-index:1050;min-width:160px">
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="viewDocument(doc)">
+                        <i class="fas fa-eye mr-2 text-info"></i> View / Download
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="editDocument(doc)">
+                        <i class="fas fa-edit mr-2 text-primary"></i> Edit
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="confirmDeleteDocument(doc)">
+                        <i class="fas fa-trash-alt mr-2 text-danger"></i> Delete
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <app-pagination
+            *ngIf="!loading && documents.length > 0"
+            [currentPage]="page"
+            [pageSize]="pageSize"
+            [totalItems]="totalItems"
+            [totalPages]="totalPages"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>

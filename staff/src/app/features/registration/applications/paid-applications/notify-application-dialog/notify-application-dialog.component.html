@@ -1,0 +1,79 @@
+<div class="dialog-shell">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Notify Applicant</h2>
+        <p class="dialog-subtitle">Application No. {{ batch.application_number }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <div class="summary-row">
+      <span class="summary-label">Applicant</span>
+      <span class="summary-value">{{ batch.applicant_full_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Intake</span>
+      <span class="summary-value">{{ batch.intake_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Training Level</span>
+      <span class="summary-value">{{ batch.training_level_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Residence</span>
+      <span class="summary-value">{{ batch.residence || '—' }}</span>
+    </div>
+
+    <div class="form-group mt-3">
+      <label class="form-label req">Select one programme to notify</label>
+      <small class="text-muted d-block mb-2">
+        The applicant will be provisionally selected for this programme. Other programmes remain pending until a final decision is made.
+      </small>
+
+      <div class="programme-list">
+        <label class="programme-item" *ngFor="let app of batch.applications">
+          <input type="radio" name="programme" [value]="app.id" [(ngModel)]="selectedApplicationId">
+          <span>{{ app.programme_name }} <span class="text-muted small">({{ app.programme_code }})</span>
+            <span class="badge ml-1" [ngClass]="app.choice === 1 ? 'badge-primary' : 'badge-secondary'" *ngIf="choiceLabel(app.choice)">{{ choiceLabel(app.choice) }}</span></span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-save" (click)="notify()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas fa-bell mr-1"></i>Notify Applicant
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Notifying&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

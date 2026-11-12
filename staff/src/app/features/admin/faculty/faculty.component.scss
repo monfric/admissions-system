@@ -1,0 +1,348 @@
+/* Faculties Component Styles */
+
+/* Card Enhancements */
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Table Styles */
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+/* Badge Styles */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: #28a745;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  font-family: 'Courier New', monospace;
+}
+
+/* Button Group */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Search Input */
+.input-group {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-group .form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Filter Buttons */
+.btn-outline-primary.active,
+.btn-outline-success.active,
+.btn-outline-danger.active {
+  font-weight: 600;
+}
+
+/* Pagination */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  color: #007bff;
+  transition: all 0.3s ease;
+}
+
+.page-link:hover {
+  color: #0056b3;
+  background-color: #e9ecef;
+}
+
+.page-item.active .page-link {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Modal Styles */
+.modal-header.bg-primary {
+  background-color: #007bff !important;
+  color: white;
+}
+
+.modal-header .close {
+  color: white;
+  opacity: 0.8;
+}
+
+.modal-header .close:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 2px solid #dee2e6;
+}
+
+/* Form Styles */
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background-image: none;
+}
+
+.invalid-feedback {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Custom Switch */
+.custom-switch .custom-control-label::before {
+  background-color: #dee2e6;
+}
+
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+/* Alert Styles */
+.alert {
+  border-left: 4px solid;
+  animation: slideInDown 0.3s ease-out;
+}
+
+.alert-success {
+  border-left-color: #28a745;
+}
+
+.alert-danger {
+  border-left-color: #dc3545;
+}
+
+.alert-info {
+  border-left-color: #17a2b8;
+}
+
+/* Loading Spinner */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Text Uppercase for Code Input */
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+/* Required Field Indicator */
+.text-danger {
+  color: #dc3545 !important;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background-color: transparent;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.breadcrumb-item a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Content Header */
+.content-header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* Empty State */
+.alert.text-center {
+  padding: 3rem 2rem;
+}
+
+.alert.text-center .icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive Table */
+.table-responsive {
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+
+/* Action Buttons Hover Effect */
+.btn-group .btn {
+  transition: all 0.2s ease;
+}
+
+.btn-group .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Page Size Select */
+.form-control.w-auto {
+  width: auto !important;
+  display: inline-block;
+}
+
+/* Animation */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Utility Classes */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.font-weight-bold {
+  font-weight: 700 !important;
+}
+
+/* Small Text */
+small,
+.small {
+  font-size: 0.875rem;
+}
+
+/* Disabled State */
+button:disabled,
+button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Modal Backdrop */
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+/* Focus Visible for Accessibility */
+*:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .btn,
+  .pagination,
+  .card-tools,
+  .breadcrumb {
+    display: none !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .col-md-4,
+  .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Hover Effects for Interactive Elements */
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  background-color: #f8f9fa;
+}
+
+/* Status Badge Animation */
+.badge {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

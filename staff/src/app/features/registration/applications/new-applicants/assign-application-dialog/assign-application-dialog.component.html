@@ -1,0 +1,107 @@
+<div class="dialog-shell">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Assign Application</h2>
+        <p class="dialog-subtitle">{{ applicant.full_name }} &bull; {{ applicant.email }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <!-- Step 1: Intake -->
+    <div class="step-block">
+      <label class="form-label req">1. Select Active Intake</label>
+      <select class="form-control" [(ngModel)]="selectedIntakeId" (ngModelChange)="onIntakeChange()">
+        <option [ngValue]="null">— Select Intake —</option>
+        <option *ngFor="let i of intakes" [ngValue]="i.id">{{ i.intake_month }} {{ i.intake_year }}</option>
+      </select>
+      <small class="text-muted d-block mt-1" *ngIf="loadingIntakes"><i class="fas fa-spinner fa-spin mr-1"></i>Loading intakes&hellip;</small>
+      <small class="text-muted d-block mt-1" *ngIf="!loadingIntakes && intakes.length === 0">No active intakes available.</small>
+    </div>
+
+    <!-- Step 2: Training Level -->
+    <div class="step-block" *ngIf="selectedIntakeId">
+      <label class="form-label req">2. Select Training Level</label>
+      <select class="form-control" [(ngModel)]="selectedTrainingLevelId" (ngModelChange)="onTrainingLevelChange()">
+        <option [ngValue]="null">— Select Training Level —</option>
+        <option *ngFor="let t of trainingLevels" [ngValue]="t.training_level_id">{{ t.training_level_name }}</option>
+      </select>
+      <small class="text-muted d-block mt-1" *ngIf="loadingTrainingLevels"><i class="fas fa-spinner fa-spin mr-1"></i>Loading training levels&hellip;</small>
+      <small class="text-muted d-block mt-1" *ngIf="!loadingTrainingLevels && trainingLevels.length === 0">No training levels open for this intake.</small>
+
+      <div class="fee-note" *ngIf="selectedTrainingLevelId && selectedFee !== null">
+        <i class="fas fa-money-bill-wave mr-2"></i>
+        Application Fee: <strong>KES {{ selectedFee | number:'1.2-2' }}</strong>
+      </div>
+    </div>
+
+    <!-- Step 3: Programmes -->
+    <div class="step-block" *ngIf="selectedTrainingLevelId">
+      <label class="form-label req">3. Select Programmes</label>
+      <small class="text-muted d-block mb-2" *ngIf="loadingProgrammes"><i class="fas fa-spinner fa-spin mr-1"></i>Loading programmes&hellip;</small>
+      <small class="text-muted d-block mb-2" *ngIf="!loadingProgrammes && programmes.length === 0">No programmes open under this training level.</small>
+
+      <div class="row" *ngIf="!loadingProgrammes && programmes.length > 0">
+        <div class="col-md-6 mb-2">
+          <label class="form-label req">1st Choice</label>
+          <select class="form-control" [(ngModel)]="firstChoiceId" (ngModelChange)="onFirstChoiceChange()">
+            <option [ngValue]="null">— Select 1st choice —</option>
+            <option *ngFor="let p of programmes" [ngValue]="p.id">{{ p.programme_name }} ({{ p.programme_code }})</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">2nd Choice <span class="text-muted small">(optional)</span></label>
+          <select class="form-control" [(ngModel)]="secondChoiceId" [disabled]="!firstChoiceId || secondChoiceOptions.length === 0">
+            <option [ngValue]="null">{{ secondChoiceOptions.length ? '— No 2nd choice —' : 'No other programme available' }}</option>
+            <option *ngFor="let p of secondChoiceOptions" [ngValue]="p.id">{{ p.programme_name }} ({{ p.programme_code }})</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Residence -->
+    <div class="step-block" *ngIf="selectedTrainingLevelId && firstChoiceId">
+      <label class="form-label req">4. Mode of Residence</label>
+      <select class="form-control" [(ngModel)]="residence">
+        <option value="">— Select mode of residence —</option>
+        <option *ngFor="let r of residenceOptions" [value]="r">{{ r }}</option>
+      </select>
+    </div>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-save" (click)="assign()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas fa-check mr-1"></i>Assign Application
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Assigning&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

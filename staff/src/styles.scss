@@ -1,0 +1,27 @@
+// Clean dialog panel — strips Material's default inner padding.
+// Scroll is handled by .dialog-content max-height inside the component.
+.clean-dialog-panel {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    overflow: visible;
+
+    .mat-mdc-dialog-surface {
+      border-radius: 10px;
+      overflow: visible;
+      padding: 0 !important;
+    }
+  }
+}
+
+// Document Viewer Dialog
+.document-viewer-dialog-container {
+  .mat-mdc-dialog-container {
+    padding: 0;
+    overflow: hidden;
+    
+    .mat-mdc-dialog-surface {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  }
+}

@@ -1,0 +1,218 @@
+// ─── Dialog Shell ─────────────────────────────────────────────────────────────
+.dialog-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dialog-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dialog-header-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.dialog-title    { font-size: 1.15rem; font-weight: 700; margin: 0; color: #fff; }
+.dialog-subtitle { font-size: .78rem; color: rgba(255,255,255,.85); margin: 0; }
+
+.btn-close-dialog {
+  background: rgba(255,255,255,.2);
+  border: none;
+  color: #fff;
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: rgba(255,255,255,.35); }
+}
+
+// ─── Body ──────────────────────────────────────────────────────────────────────
+.dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+}
+
+// ─── Form Controls ─────────────────────────────────────────────────────────────
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  font-size: .85rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 6px;
+  display: block;
+
+  &.req::after {
+    content: ' *';
+    color: #ef4444;
+  }
+}
+
+.form-control {
+  border-radius: 8px;
+  border-color: #d1d5db;
+  font-size: .9rem;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #059669;
+  }
+
+  &.is-invalid {
+    border-color: #ef4444;
+    &:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+  }
+}
+
+textarea.form-control { resize: vertical; }
+
+.invalid-feedback { font-size: .76rem; color: #dc2626; }
+
+// ─── Toggle ────────────────────────────────────────────────────────────────────
+.toggle-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 14px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+}
+
+.toggle-label { font-size: .84rem; font-weight: 600; color: #374151; }
+.toggle-desc  { font-size: .73rem; color: #9ca3af; margin-top: 1px; flex: 1; }
+
+.custom-toggle {
+  position: relative;
+  flex-shrink: 0;
+  input[type=checkbox] { opacity: 0; width: 0; height: 0; position: absolute; }
+  input:checked + .toggle-slider { background: #2563eb; }
+  input:checked + .toggle-slider::before { transform: translateX(18px); }
+}
+
+.toggle-slider {
+  display: block;
+  width: 40px; height: 22px;
+  background: #d1d5db;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background .2s;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 2px; top: 2px;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+  }
+}
+
+// ─── Error Banner ──────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: .84rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  flex-shrink: 0;
+  span { flex: 1; }
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  padding: 2px 4px;
+  opacity: .7;
+  &:hover { opacity: 1; }
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: .86rem; font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: #f3f4f6; }
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: .86rem; font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  display: inline-flex; align-items: center; gap: 6px;
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}

@@ -1,0 +1,211 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Intakes Management</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item active">Intakes</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+
+      <!-- Statistics -->
+      <div class="row mb-1">
+        <div class="col-lg-3 col-md-6" *ngFor="let card of statCards">
+          <div class="small-box" [ngClass]="'bg-' + card.color">
+            <div class="inner">
+              <h3 style="font-size:1.4rem;">{{ card.value }}</h3>
+              <p style="font-size:.85rem;">{{ card.label }}</p>
+              <small class="stat-subtext">{{ card.subtext }}</small>
+            </div>
+            <div class="icon"><i [class]="card.icon"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">All Intakes</h3>
+          <div class="card-tools">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              (click)="openAddIntakeDialog()">
+              <i class="fas fa-plus"></i> Add New Intake
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search and Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search intake..."
+                  [(ngModel)]="searchTerm"
+                  (keyup.enter)="onSearch()">
+                <div class="input-group-append">
+                  <button class="btn btn-default" type="button" (click)="onSearch()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    type="button"
+                    (click)="clearSearch()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="btn-group" role="group">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  [class.active]="statusFilter === 'all'"
+                  (click)="setStatusFilter('all')">
+                  All
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-success"
+                  [class.active]="statusFilter === 'active'"
+                  (click)="setStatusFilter('active')">
+                  Active
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  [class.active]="statusFilter === 'inactive'"
+                  (click)="setStatusFilter('inactive')">
+                  Inactive
+                </button>
+              </div>
+            </div>
+
+            <div class="col-md-4 d-flex justify-content-md-end align-items-center mt-2 mt-md-0">
+              <label class="text-muted small mb-0 mr-2">Per page:</label>
+              <select
+                class="form-control form-control-sm"
+                style="width: auto;"
+                [(ngModel)]="pageSize"
+                (ngModelChange)="changePageSize($event)">
+                <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- Intake Filter -->
+          <div class="row mb-3">
+            <div class="col-xl-3 col-md-4 col-sm-6">
+              <label class="filter-label">Intake</label>
+              <select class="form-control form-control-sm" [(ngModel)]="intakeFilter" (ngModelChange)="onIntakeFilterChange()">
+                <option [ngValue]="null">All</option>
+                <option *ngFor="let i of intakeOptions" [ngValue]="i.id">{{ i.intake_month }} {{ i.intake_year }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Intakes Table -->
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Intake Name</th>
+                  <th class="text-center">Programmes</th>
+                  <th class="text-center">Running</th>
+                  <th class="text-center">Closed</th>
+                  <th class="text-center">Paid</th>
+                  <th class="text-center">Unpaid</th>
+                  <th class="text-center">All Applications</th>
+                  <th>Created</th>
+                  <th style="width: 100px">Status</th>
+                  <th style="width: 70px" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="11" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Loading intakes&hellip;
+                  </td>
+                </tr>
+                <tr *ngIf="!loading && intakes.length === 0">
+                  <td colspan="11" class="text-center py-4 text-muted">No intakes found.</td>
+                </tr>
+                <tr *ngFor="let intake of intakes; let i = index" [class.table-secondary]="!intake.is_active">
+                  <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                  <td>{{ intake.intake_month }} {{ intake.intake_year }}</td>
+                  <td class="text-center">{{ intake.programme_count }}</td>
+                  <td class="text-center">{{ intake.running_count }}</td>
+                  <td class="text-center">{{ intake.closed_count }}</td>
+                  <td class="text-center">{{ intake.paid_count }}</td>
+                  <td class="text-center">{{ intake.unpaid_count }}</td>
+                  <td class="text-center">{{ intake.application_count }}</td>
+                  <td>{{ intake.created_at | date:'MMM d, y' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="intake.is_active" [class.badge-secondary]="!intake.is_active">
+                      {{ intake.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="text-center position-relative" (click)="$event.stopPropagation()">
+                    <button class="btn btn-sm btn-tool" (click)="toggleMenu(intake.id, $event)">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right show position-absolute"
+                         *ngIf="openMenuId === intake.id"
+                         style="top:100%;right:0;z-index:1050;min-width:140px">
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="openViewIntake(intake)">
+                        <i class="fas fa-eye mr-2 text-info"></i> View
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="openEditIntake(intake)">
+                        <i class="fas fa-edit mr-2 text-primary"></i> Edit
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="manageIntake(intake)">
+                        <i class="fas fa-cogs mr-2 text-secondary"></i> Manage Intake
+                      </a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="confirmDeleteIntake(intake)">
+                        <i class="fas fa-trash mr-2"></i> Delete
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <app-pagination
+            *ngIf="!loading && intakes.length > 0"
+            [currentPage]="page"
+            [pageSize]="pageSize"
+            [totalItems]="totalItems"
+            [totalPages]="totalPages"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>

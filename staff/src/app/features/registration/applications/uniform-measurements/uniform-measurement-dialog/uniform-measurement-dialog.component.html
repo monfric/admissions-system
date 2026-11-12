@@ -1,0 +1,91 @@
+<div class="dialog-shell">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-ruler"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Uniform Measurements</h2>
+        <p class="dialog-subtitle">{{ student?.admission_number || 'Loading…' }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="close()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <div *ngIf="loading" class="text-center py-4 text-muted">
+      <i class="fas fa-spinner fa-spin mr-1"></i> Loading measurements&hellip;
+    </div>
+
+    <ng-container *ngIf="student as s">
+      <div class="summary-row">
+        <span class="summary-label">Student</span>
+        <span class="summary-value">{{ s.applicant_full_name }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Class</span>
+        <span class="summary-value">{{ s.programme_name }} – {{ s.intake_name }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Uniform</span>
+        <span class="summary-value">{{ set?.label || '—' }} <span class="text-muted small">(inches)</span></span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Submitted On</span>
+        <span class="summary-value">{{ s.measurement ? (s.measurement.submitted_at | date:'MMM d, y, h:mm a') : '—' }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Status</span>
+        <span class="summary-value">
+          <span class="badge" [ngClass]="statusDisplay(s.measurement_status).badge">
+            {{ statusDisplay(s.measurement_status).label }}
+          </span>
+        </span>
+      </div>
+
+      <div class="garment-grid" *ngIf="set">
+        <div class="garment-table" *ngFor="let g of set.garments">
+          <div class="garment-head"><span>{{ g.name }}</span><span>Inches</span></div>
+          <div class="garment-row" *ngFor="let f of g.fields">
+            <span class="garment-label">{{ f.label }}</span>
+            <span class="garment-value">{{ value(f.key) ?? '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="confirm-note" *ngIf="s.measurement?.tailor_confirmed">
+        <i class="fas fa-check-circle mr-1"></i>The student confirmed these measurements were taken by a qualified tailor.
+      </div>
+    </ng-container>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="close()">Close</button>
+    <button type="button" class="btn-outline" *ngIf="student?.measurement_status === 'submitted'"
+            (click)="unlock()" [disabled]="unlocking">
+      <i class="fas" [ngClass]="unlocking ? 'fa-spinner fa-spin' : 'fa-lock-open'"></i>Unlock for Correction
+    </button>
+    <button type="button" class="btn-save" *ngIf="student?.measurement" (click)="viewPdf()">
+      <i class="fas fa-file-pdf"></i>Print / PDF
+    </button>
+  </div>
+
+</div>

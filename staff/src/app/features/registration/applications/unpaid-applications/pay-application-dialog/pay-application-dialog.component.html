@@ -1,0 +1,82 @@
+<div class="dialog-shell" [formGroup]="paymentForm">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-money-bill-wave"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Confirm Payment</h2>
+        <p class="dialog-subtitle">Application No. {{ batch.application_number }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <div class="summary-row">
+      <span class="summary-label">Applicant</span>
+      <span class="summary-value">{{ batch.applicant_full_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Intake</span>
+      <span class="summary-value">{{ batch.intake_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Training Level</span>
+      <span class="summary-value">{{ batch.training_level_name }}</span>
+    </div>
+
+    <div class="form-group mt-3">
+      <label class="form-label">Application Fee (KES)</label>
+      <input type="text" class="form-control" [value]="batch.application_fee | number:'1.2-2'" disabled readonly>
+      <small class="text-muted d-block mt-1">Amount is set from the intake's fee schedule and cannot be changed here.</small>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label req">Payment Mode</label>
+      <select class="form-control" formControlName="payment_method" [class.is-invalid]="fieldError('payment_method')">
+        <option *ngFor="let mode of paymentModes" [value]="mode">{{ mode }}</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="fieldError('payment_method')">{{ fieldError('payment_method') }}</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label req">M-Pesa Reference Code</label>
+      <input type="text" class="form-control" formControlName="transaction_code"
+             placeholder="e.g. QK7X8Y9Z1A" [class.is-invalid]="fieldError('transaction_code')">
+      <div class="invalid-feedback" *ngIf="fieldError('transaction_code')">{{ fieldError('transaction_code') }}</div>
+      <small class="text-muted d-block mt-1">Enter the M-Pesa transaction code provided by the applicant.</small>
+    </div>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-save" (click)="confirmPayment()" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas fa-check mr-1"></i>Confirm Payment
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Processing&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

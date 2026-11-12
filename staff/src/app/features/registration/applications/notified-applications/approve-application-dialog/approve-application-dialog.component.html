@@ -1,0 +1,82 @@
+<div class="dialog-shell">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Application Decision</h2>
+        <p class="dialog-subtitle">Application No. {{ batch.application_number }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="cancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <div class="summary-row">
+      <span class="summary-label">Applicant</span>
+      <span class="summary-value">{{ batch.applicant_full_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Intake</span>
+      <span class="summary-value">{{ batch.intake_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Training Level</span>
+      <span class="summary-value">{{ batch.training_level_name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Residence</span>
+      <span class="summary-value">{{ batch.residence || '—' }}</span>
+    </div>
+
+    <div class="form-group mt-3">
+      <label class="form-label">{{ programmeLabel }}</label>
+      <small class="text-muted d-block mb-2">
+        This applicant was provisionally selected for the programme below. Approve to issue an admission letter, or Reject to decline.
+      </small>
+      <div class="notified-programme-box">
+        <i class="fas fa-graduation-cap mr-2"></i>{{ notifiedProgramme }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Remarks (Optional)</label>
+      <textarea class="form-control" rows="3" [(ngModel)]="remarks" placeholder="Any notes on the decision..."></textarea>
+    </div>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="error-dismiss" type="button" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn-reject" (click)="decide('reject')" [disabled]="submitting">
+      <i class="fas fa-times-circle mr-1"></i>Reject
+    </button>
+    <button type="button" class="btn-save" (click)="decide('approve')" [disabled]="submitting">
+      <span *ngIf="!submitting">
+        <i class="fas fa-check-circle mr-1"></i>Approve
+      </span>
+      <span *ngIf="submitting">
+        <i class="fas fa-spinner fa-spin mr-1"></i>Processing&hellip;
+      </span>
+    </button>
+  </div>
+
+</div>

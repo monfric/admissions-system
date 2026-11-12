@@ -1,0 +1,189 @@
+// ─── Dialog Shell ─────────────────────────────────────────────────────────────
+.dialog-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dialog-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dialog-header-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.dialog-title    { font-size: 1.15rem; font-weight: 700; margin: 0; color: #fff; }
+.dialog-subtitle { font-size: .78rem; color: rgba(255,255,255,.8); margin: 0; }
+
+.btn-close-dialog {
+  background: rgba(255,255,255,.2);
+  border: none;
+  color: #fff;
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: rgba(255,255,255,.35); }
+}
+
+// ─── Body ──────────────────────────────────────────────────────────────────────
+.dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+}
+
+// ─── Form Controls ─────────────────────────────────────────────────────────────
+.form-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  display: block;
+
+  &.req::after {
+    content: ' *';
+    color: #ef4444;
+  }
+}
+
+.form-control {
+  border-radius: 8px;
+  border-color: #d1d5db;
+  font-size: .88rem;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+  }
+
+  &.is-invalid {
+    border-color: #ef4444;
+    &:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+  }
+}
+
+.invalid-feedback { font-size: .76rem; color: #dc2626; }
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: .84rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  flex-shrink: 0;
+  span { flex: 1; }
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  padding: 2px 4px;
+  opacity: .7;
+  &:hover { opacity: 1; }
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: .86rem; font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: #f3f4f6; }
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: .86rem; font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  display: inline-flex; align-items: center; gap: 6px;
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+// ─── Status toggle button (matches Manage Intake) ─────────────────────────────
+.status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+
+  i { font-size: 1rem; }
+
+  &:hover { border-color: #9ca3af; }
+
+  &.is-active {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: #047857;
+
+    i { color: #10b981; }
+  }
+}
+
+.file-input {
+  height: auto;
+  padding: 6px 10px;
+}

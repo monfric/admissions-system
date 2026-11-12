@@ -1,0 +1,14 @@
+<div class="rte" [class.rte-disabled]="disabled" [class.rte-invalid]="invalid">
+  <div class="rte-toolbar" *ngIf="!disabled">
+    <button type="button" class="rte-tool" *ngFor="let tool of tools"
+            [class.active]="active[tool.command]" [title]="tool.title"
+            (mousedown)="$event.preventDefault()" (click)="format(tool.command)">
+      <i class="fas" [ngClass]="tool.icon"></i>
+    </button>
+  </div>
+  <div #editable class="rte-content"
+       [attr.contenteditable]="!disabled"
+       [attr.data-placeholder]="placeholder"
+       [class.rte-empty]="empty"
+       (input)="onInput()" (blur)="onBlur()" (focus)="onFocus()" (paste)="onPaste($event)"></div>
+</div>

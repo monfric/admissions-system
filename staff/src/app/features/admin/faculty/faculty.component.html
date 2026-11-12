@@ -1,0 +1,350 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">Faculties Management</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item"><a routerLink="/registry">Registry</a></li>
+            <li class="breadcrumb-item active">Faculties</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      
+      <!-- Alert Messages -->
+      <div class="row" *ngIf="successMessage || errorMessage">
+        <div class="col-12">
+          <div class="alert alert-success alert-dismissible fade show" *ngIf="successMessage">
+            <button type="button" class="close" (click)="successMessage = ''">&times;</button>
+            <i class="icon fas fa-check"></i> {{ successMessage }}
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show" *ngIf="errorMessage">
+            <button type="button" class="close" (click)="errorMessage = ''">&times;</button>
+            <i class="icon fas fa-ban"></i> {{ errorMessage }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">All Faculties</h3>
+          <div class="card-tools">
+            <button 
+              type="button" 
+              class="btn btn-primary btn-sm" 
+              (click)="openCreateModal()"
+              *ngIf="canCreate">
+              <i class="fas fa-plus"></i> Add New Faculty
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search and Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Search faculties..."
+                  [(ngModel)]="searchTerm"
+                  (keyup.enter)="onSearch()">
+                <div class="input-group-append">
+                  <button class="btn btn-default" type="button" (click)="onSearch()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                  <button 
+                    class="btn btn-default" 
+                    type="button" 
+                    (click)="clearSearch()"
+                    *ngIf="searchTerm">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="btn-group" role="group">
+                <button 
+                  type="button" 
+                  class="btn btn-outline-primary"
+                  [class.active]="activeFilter === undefined"
+                  (click)="filterByStatus(undefined)">
+                  All
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-success"
+                  [class.active]="activeFilter === true"
+                  (click)="filterByStatus(true)">
+                  Active
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-danger"
+                  [class.active]="activeFilter === false"
+                  (click)="filterByStatus(false)">
+                  Inactive
+                </button>
+              </div>
+            </div>
+
+            <div class="col-md-4 text-right">
+              <select class="form-control w-auto d-inline" [(ngModel)]="pageSize" (change)="changePageSize(pageSize)">
+                <option [value]="10">10 per page</option>
+                <option [value]="25">25 per page</option>
+                <option [value]="50">50 per page</option>
+                <option [value]="100">100 per page</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Loading Spinner -->
+          <div class="text-center py-5" *ngIf="isLoading">
+            <div class="spinner-border text-primary" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2">Loading faculties...</p>
+          </div>
+
+          <!-- No Data Message -->
+          <div class="alert alert-info text-center" *ngIf="!isLoading && faculties.length === 0">
+            <i class="icon fas fa-info"></i>
+            No faculties found. {{ canCreate ? 'Click "Add New Faculty" to create one.' : '' }}
+          </div>
+
+          <!-- Faculties Table -->
+          <div class="table-responsive" *ngIf="!isLoading && faculties.length > 0">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Faculty Name</th>
+                  <th style="width: 100px">Code</th>
+                  <th>Description</th>
+                  <th style="width: 100px">Status</th>
+                  <th style="width: 100px">Created</th>
+                  <th style="width: 150px" *ngIf="canUpdate || canDelete">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let faculty of faculties; let i = index">
+                  <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                  <td>
+                    <strong>{{ faculty.name }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge badge-secondary">{{ faculty.code }}</span>
+                  </td>
+                  <td>{{ faculty.description }}</td>
+                  <td>
+                    <span 
+                      class="badge"
+                      [class.badge-success]="faculty.is_active"
+                      [class.badge-danger]="!faculty.is_active">
+                      {{ faculty.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <small>{{ faculty.created_at | date:'short' }}</small>
+                  </td>
+                  <td *ngIf="canUpdate || canDelete">
+                    <div class="btn-group btn-group-sm">
+                      <button 
+                        type="button" 
+                        class="btn btn-info"
+                        (click)="openEditModal(faculty)"
+                        *ngIf="canUpdate"
+                        title="Edit">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-danger"
+                        (click)="confirmDelete(faculty)"
+                        *ngIf="canDelete"
+                        title="Delete">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="row mt-3" *ngIf="!isLoading && faculties.length > 0">
+            <div class="col-md-6">
+              <p class="text-muted">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} 
+                to {{ Math.min(currentPage * pageSize, totalItems) }} 
+                of {{ totalItems }} entries
+              </p>
+            </div>
+            <div class="col-md-6">
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end mb-0">
+                  <li class="page-item" [class.disabled]="currentPage === 1">
+                    <a class="page-link" (click)="changePage(currentPage - 1)" href="javascript:void(0)">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  </li>
+                  
+                  <li 
+                    class="page-item" 
+                    *ngFor="let page of getPageNumbers()"
+                    [class.active]="page === currentPage">
+                    <a class="page-link" (click)="changePage(page)" href="javascript:void(0)">
+                      {{ page }}
+                    </a>
+                  </li>
+                  
+                  <li class="page-item" [class.disabled]="currentPage === totalPages">
+                    <a class="page-link" (click)="changePage(currentPage + 1)" href="javascript:void(0)">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Create/Edit Faculty Modal -->
+<div class="modal fade" id="facultyModal" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <form [formGroup]="facultyForm" (ngSubmit)="onSubmit()">
+        <div class="modal-header bg-primary">
+          <h5 class="modal-title">
+            <i class="fas fa-building mr-2"></i>
+            {{ isEditMode ? 'Edit Faculty' : 'Create New Faculty' }}
+          </h5>
+          <button type="button" class="close text-white" (click)="closeModal()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Error Message in Modal -->
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <i class="icon fas fa-ban"></i> {{ errorMessage }}
+          </div>
+
+          <div class="row">
+            <!-- Faculty Name -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="name">Faculty Name <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="name"
+                  formControlName="name"
+                  placeholder="e.g., Technical Faculty"
+                  [class.is-invalid]="hasError('name', 'required') || hasError('name', 'minlength')">
+                <div class="invalid-feedback" *ngIf="hasError('name', 'required') || hasError('name', 'minlength')">
+                  {{ getErrorMessage('name') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Faculty Code -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="code">Faculty Code <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  class="form-control text-uppercase" 
+                  id="code"
+                  formControlName="code"
+                  placeholder="e.g., TECH"
+                  [class.is-invalid]="hasError('code', 'required') || hasError('code', 'minlength') || hasError('code', 'maxlength')">
+                <div class="invalid-feedback" *ngIf="hasError('code', 'required') || hasError('code', 'minlength') || hasError('code', 'maxlength')">
+                  {{ getErrorMessage('code') }}
+                </div>
+                <small class="form-text text-muted">2-10 characters, will be converted to uppercase</small>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="description">Description <span class="text-danger">*</span></label>
+                <textarea 
+                  class="form-control" 
+                  id="description"
+                  formControlName="description"
+                  rows="4"
+                  placeholder="Enter faculty description..."
+                  [class.is-invalid]="hasError('description', 'required')"></textarea>
+                <div class="invalid-feedback" *ngIf="hasError('description', 'required')">
+                  {{ getErrorMessage('description') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Status -->
+            <div class="col-md-12">
+              <div class="form-group">
+                <div class="custom-control custom-switch">
+                  <input 
+                    type="checkbox" 
+                    class="custom-control-input" 
+                    id="is_active"
+                    formControlName="is_active">
+                  <label class="custom-control-label" for="is_active">
+                    Active Status
+                  </label>
+                </div>
+                <small class="form-text text-muted">
+                  Only active faculties will be available for selection in other modules
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="closeModal()"
+            [disabled]="isSubmitting">
+            <i class="fas fa-times mr-1"></i> Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isSubmitting">
+            <span *ngIf="isSubmitting">
+              <i class="fas fa-spinner fa-spin mr-1"></i> Saving...
+            </span>
+            <span *ngIf="!isSubmitting">
+              <i class="fas fa-save mr-1"></i> {{ isEditMode ? 'Update' : 'Create' }} Faculty
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

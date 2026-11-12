@@ -1,0 +1,221 @@
+<div class="dialog-shell">
+
+  <!-- ===== HEADER ===== -->
+  <div class="dialog-header">
+    <div class="dialog-header-left">
+      <div class="dialog-header-icon">
+        <i class="fas fa-cogs"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title">Manage Intake</h2>
+        <p class="dialog-subtitle">{{ intakeName }}</p>
+      </div>
+    </div>
+    <button class="btn-close-dialog" type="button" (click)="close()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ===== TABS ===== -->
+  <div class="dialog-tabs">
+    <button class="dialog-tab" [class.tab-active]="activeTab === 'programmes'" type="button" (click)="selectTab('programmes')">
+      <i class="fas fa-graduation-cap mr-1"></i> Programmes
+    </button>
+    <button class="dialog-tab" [class.tab-active]="activeTab === 'fees'" type="button" (click)="selectTab('fees')">
+      <i class="fas fa-money-bill-wave mr-1"></i> Application Fees
+    </button>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="dialog-body">
+
+    <!-- ── Tab: Programmes ────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'programmes'" class="tab-pane">
+
+      <div class="form-section-title">
+        <i class="fas fa-list mr-2 text-primary"></i>Registered Programmes
+      </div>
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered table-sm table-striped mini-table">
+          <thead>
+            <tr>
+              <th style="width: 40px">#</th>
+              <th>Programme Name</th>
+              <th>Training Level</th>
+              <th style="width: 90px">Status</th>
+              <th style="width: 90px" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loadingProgrammes">
+              <td colspan="5" class="text-center py-3"><i class="fas fa-spinner fa-spin mr-1"></i> Loading&hellip;</td>
+            </tr>
+            <tr *ngIf="!loadingProgrammes && intakeProgrammes.length === 0">
+              <td colspan="5" class="text-center py-3 text-muted">No programmes registered for this intake yet.</td>
+            </tr>
+            <tr *ngFor="let ip of intakeProgrammes; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ ip.programme_name }} <span class="text-muted small">({{ ip.programme_code }})</span></td>
+              <td>{{ ip.training_level_name }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="ip.is_active" [class.badge-secondary]="!ip.is_active">
+                  {{ ip.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn-row-action" type="button" title="Edit" (click)="editProgramme(ip)">
+                  <i class="fas fa-edit text-primary"></i>
+                </button>
+                <button class="btn-row-action" type="button" title="Delete" (click)="deleteProgramme(ip)">
+                  <i class="fas fa-trash text-danger"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-section-title">
+        <i class="fas fa-plus-circle mr-2 text-primary"></i>
+        {{ editingProgrammeId ? 'Edit Registered Programme' : 'Register New Programme' }}
+      </div>
+
+      <form [formGroup]="programmeForm" class="inline-form" (ngSubmit)="saveProgramme()">
+        <div class="inline-form-row">
+
+          <div class="inline-form-field flex-grow">
+            <label class="form-label req">Programme</label>
+            <select class="form-control" formControlName="programme_id">
+              <option [ngValue]="null">— Select Programme —</option>
+              <option *ngFor="let p of allProgrammes" [ngValue]="p.id">{{ p.name }} ({{ p.code }})</option>
+            </select>
+          </div>
+
+          <div class="inline-form-field">
+            <label class="form-label req">Status</label>
+            <button type="button" class="status-toggle-btn"
+                    [class.is-active]="programmeForm.get('is_active')?.value"
+                    (click)="toggleActive(programmeForm)">
+              <i class="fas" [ngClass]="programmeForm.get('is_active')?.value ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+              {{ programmeForm.get('is_active')?.value ? 'Active' : 'Inactive' }}
+            </button>
+          </div>
+
+          <div class="inline-form-field inline-form-actions">
+            <button type="submit" class="btn-save" [disabled]="submittingProgramme">
+              <i class="fas mr-1" [ngClass]="submittingProgramme ? 'fa-spinner fa-spin' : (editingProgrammeId ? 'fa-save' : 'fa-plus')"></i>
+              {{ editingProgrammeId ? 'Update' : 'Register' }}
+            </button>
+            <button type="button" class="btn-cancel-inline" *ngIf="editingProgrammeId" (click)="cancelEditProgramme()">
+              Cancel
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+    </div>
+
+    <!-- ── Tab: Application Fees ─────────────────────────────── -->
+    <div *ngIf="activeTab === 'fees'" class="tab-pane">
+
+      <div class="form-section-title">
+        <i class="fas fa-list mr-2 text-primary"></i>Application Fees by Training Level
+      </div>
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered table-sm table-striped mini-table">
+          <thead>
+            <tr>
+              <th style="width: 40px">#</th>
+              <th>Training Level</th>
+              <th>Application Fee (KES)</th>
+              <th style="width: 90px">Status</th>
+              <th style="width: 90px" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loadingFees">
+              <td colspan="5" class="text-center py-3"><i class="fas fa-spinner fa-spin mr-1"></i> Loading&hellip;</td>
+            </tr>
+            <tr *ngIf="!loadingFees && intakeTrainingLevels.length === 0">
+              <td colspan="5" class="text-center py-3 text-muted">No fee tiers set for this intake yet.</td>
+            </tr>
+            <tr *ngFor="let itl of intakeTrainingLevels; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ itl.training_level_name }}</td>
+              <td>{{ itl.application_fee | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="itl.is_active" [class.badge-secondary]="!itl.is_active">
+                  {{ itl.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn-row-action" type="button" title="Edit" (click)="editFee(itl)">
+                  <i class="fas fa-edit text-primary"></i>
+                </button>
+                <button class="btn-row-action" type="button" title="Delete" (click)="deleteFee(itl)">
+                  <i class="fas fa-trash text-danger"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-section-title">
+        <i class="fas fa-plus-circle mr-2 text-primary"></i>
+        {{ editingFeeId ? 'Edit Fee Tier' : 'Add Fee Tier' }}
+      </div>
+
+      <form [formGroup]="feeForm" class="inline-form" (ngSubmit)="saveFee()">
+        <div class="inline-form-row">
+
+          <div class="inline-form-field flex-grow">
+            <label class="form-label req">Training Level</label>
+            <select class="form-control" formControlName="training_level_id">
+              <option [ngValue]="null">— Select Training Level —</option>
+              <option *ngFor="let t of allTrainingLevels" [ngValue]="t.id">{{ t.name }}</option>
+            </select>
+          </div>
+
+          <div class="inline-form-field">
+            <label class="form-label req">Application Fee (KES)</label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="application_fee" placeholder="e.g. 1500">
+          </div>
+
+          <div class="inline-form-field">
+            <label class="form-label">Status</label>
+            <button type="button" class="status-toggle-btn"
+                    [class.is-active]="feeForm.get('is_active')?.value"
+                    (click)="toggleActive(feeForm)">
+              <i class="fas" [ngClass]="feeForm.get('is_active')?.value ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+              {{ feeForm.get('is_active')?.value ? 'Active' : 'Inactive' }}
+            </button>
+          </div>
+
+          <div class="inline-form-field inline-form-actions">
+            <button type="submit" class="btn-save" [disabled]="submittingFee">
+              <i class="fas mr-1" [ngClass]="submittingFee ? 'fa-spinner fa-spin' : (editingFeeId ? 'fa-save' : 'fa-plus')"></i>
+              {{ editingFeeId ? 'Update' : 'Add Fee' }}
+            </button>
+            <button type="button" class="btn-cancel-inline" *ngIf="editingFeeId" (click)="cancelEditFee()">
+              Cancel
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+    </div>
+
+  </div>
+  <!-- /dialog-body -->
+
+  <!-- ===== FOOTER ===== -->
+  <div class="dialog-footer">
+    <button type="button" class="btn-cancel" (click)="close()">Close</button>
+  </div>
+
+</div>
