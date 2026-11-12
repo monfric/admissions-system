@@ -10,6 +10,8 @@ export interface DashboardStats {
       total: number;
       today: number;
       unpaid: number;
+      /** Unpaid applications whose latest payment proof is waiting to be checked. */
+      proofs_awaiting: number;
       paid: number;
       paid_today: number;
       pending_decision: number;

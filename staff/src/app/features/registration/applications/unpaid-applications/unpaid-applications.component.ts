@@ -92,6 +92,15 @@ export class UnpaidApplicationsComponent implements OnInit {
   }
 
   /** A dropdown filter changed: back to page 1 and reload. */
+  /** '' | none | submitted | rejected */
+  proofFilter = '';
+
+  setProofFilter(value: string): void {
+    this.proofFilter = value;
+    this.page = 1;
+    this.loadBatches();
+  }
+
   onFiltersChange(filters: ApplicationListFilters): void {
     this.filters = filters;
     this.page = 1;
@@ -101,7 +110,8 @@ export class UnpaidApplicationsComponent implements OnInit {
   loadBatches(): void {
     this.loading = true;
     this.applicationBatchService.getAll(
-      this.page, this.pageSize, this.searchTerm || undefined, 'unpaid', undefined, undefined, this.filters
+      this.page, this.pageSize, this.searchTerm || undefined, 'unpaid', undefined, undefined,
+      { ...this.filters, proofStatus: this.proofFilter || undefined }
     ).subscribe({
       next: res => {
         this.loading = false;
@@ -197,11 +207,10 @@ export class UnpaidApplicationsComponent implements OnInit {
       width: '520px', maxWidth: '95vw',
       panelClass: 'applicant-dialog-container',
       data: { batch }
-    }).afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.loadBatches();
-        this.loadStats();
-      }
+    }).afterClosed().subscribe(() => {
+      // A proof may have been uploaded or rejected even if no payment was made.
+      this.loadBatches();
+      this.loadStats();
     });
   }
 }

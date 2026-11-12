@@ -45,8 +45,23 @@ export interface ApplicationBatch {
   recalled_at?: string;
   applications: ApplicationItem[];
   previous_applications: PreviousApplication[];
+  /** The latest payment proof, if one was uploaded. */
+  payment_proof?: PaymentProof;
   created_at: string;
   updated_at: string;
+}
+
+/** Proof of the fee payment; a payment can only be recorded against a submitted one. */
+export interface PaymentProof {
+  /** submitted (needs checking) | accepted | rejected | replaced */
+  status: 'submitted' | 'accepted' | 'rejected' | string;
+  transaction_code: string;
+  rejection_reason: string;
+  uploaded_by_staff: boolean;
+  uploaded_at: string;
+  reviewed_at: string;
+  /** Other application numbers whose payment or proof used the same transaction code. */
+  code_used_by?: string[];
 }
 
 export interface CreateApplicationBatchRequest {

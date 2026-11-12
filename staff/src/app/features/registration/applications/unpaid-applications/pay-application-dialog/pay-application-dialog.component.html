@@ -32,6 +32,64 @@
       <span class="summary-value">{{ batch.training_level_name }}</span>
     </div>
 
+    <!-- ===== PAYMENT PROOF ===== -->
+    <div class="proof-box mt-3">
+      <div class="proof-title"><i class="fas fa-receipt mr-1"></i> Payment Proof</div>
+
+      <ng-container *ngIf="proofSubmitted; else noProof">
+        <div class="proof-meta">
+          Code <strong>{{ proof!.transaction_code }}</strong> &middot; uploaded {{ proof!.uploaded_at | date:'MMM d, y, h:mm a' }}
+          <span *ngIf="proof!.uploaded_by_staff">by staff</span>
+        </div>
+        <div class="alert alert-danger py-2 px-3 small mb-2" *ngIf="proof!.code_used_by?.length">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          This code was already used on application{{ proof!.code_used_by!.length > 1 ? 's' : '' }}
+          <strong>{{ proof!.code_used_by!.join(', ') }}</strong>. Check it isn't a reused receipt.
+        </div>
+        <div class="proof-image-wrap" *ngIf="loadingProofImage"><i class="fas fa-spinner fa-spin"></i> Loading image&hellip;</div>
+        <img *ngIf="proofImageUrl" [src]="proofImageUrl" class="proof-image" [class.proof-image-large]="proofEnlarged"
+             (click)="proofEnlarged = !proofEnlarged" alt="Payment proof" title="Click to enlarge or shrink">
+
+        <div *ngIf="!rejecting" class="mt-2">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="rejecting = true">
+            <i class="fas fa-times mr-1"></i>Reject Proof
+          </button>
+        </div>
+        <div *ngIf="rejecting" class="mt-2">
+          <label class="form-label req">Reason (the applicant will see this)</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="rejectReason" [ngModelOptions]="{standalone: true}"
+                 maxlength="255" placeholder="e.g. Image unclear, please upload a clearer screenshot">
+          <div class="mt-2">
+            <button type="button" class="btn btn-sm btn-default mr-1" (click)="rejecting = false" [disabled]="busyRejecting">Back</button>
+            <button type="button" class="btn btn-sm btn-danger" (click)="rejectProof()" [disabled]="busyRejecting">
+              <i class="fas mr-1" [ngClass]="busyRejecting ? 'fa-spinner fa-spin' : 'fa-times'"></i>Reject Proof
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noProof>
+        <div class="alert alert-warning py-2 px-3 small mb-2">
+          <ng-container *ngIf="proof?.status === 'rejected'; else none">
+            The last proof was rejected: <em>{{ proof!.rejection_reason }}</em>. Waiting for the applicant to upload a new one.
+          </ng-container>
+          <ng-template #none>The applicant hasn't uploaded a payment proof yet.</ng-template>
+          A payment can only be confirmed against a proof.
+        </div>
+        <div class="small text-muted mb-1">Paid at the office? Upload the receipt for them:</div>
+        <div class="d-flex flex-wrap" style="gap: 6px;">
+          <input type="text" class="form-control form-control-sm" style="max-width: 170px" placeholder="Transaction code"
+                 [(ngModel)]="uploadCode" [ngModelOptions]="{standalone: true}" maxlength="30" [disabled]="uploadingProof">
+          <input type="file" class="form-control-file form-control-sm" style="max-width: 220px" accept="image/jpeg,image/png"
+                 (change)="onUploadFileSelected($event)" [disabled]="uploadingProof">
+          <button type="button" class="btn btn-sm btn-primary" (click)="uploadProof()" [disabled]="uploadingProof">
+            <i class="fas mr-1" [ngClass]="uploadingProof ? 'fa-spinner fa-spin' : 'fa-upload'"></i>Upload
+          </button>
+        </div>
+        <small class="text-muted">JPG or PNG, up to 2 MB.</small>
+      </ng-template>
+    </div>
+
     <div class="form-group mt-3">
       <label class="form-label">Application Fee (KES)</label>
       <input type="text" class="form-control" [value]="batch.application_fee | number:'1.2-2'" disabled readonly>
@@ -51,7 +109,7 @@
       <input type="text" class="form-control" formControlName="transaction_code"
              placeholder="e.g. QK7X8Y9Z1A" [class.is-invalid]="fieldError('transaction_code')">
       <div class="invalid-feedback" *ngIf="fieldError('transaction_code')">{{ fieldError('transaction_code') }}</div>
-      <small class="text-muted d-block mt-1">Enter the M-Pesa transaction code provided by the applicant.</small>
+      <small class="text-muted d-block mt-1">Filled in from the applicant's proof: check it matches the image.</small>
     </div>
 
   </div>
@@ -69,7 +127,8 @@
   <!-- ===== FOOTER ===== -->
   <div class="dialog-footer">
     <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
-    <button type="button" class="btn-save" (click)="confirmPayment()" [disabled]="submitting">
+    <button type="button" class="btn-save" (click)="confirmPayment()" [disabled]="submitting || !proofSubmitted"
+            [title]="proofSubmitted ? '' : 'A payment proof is needed first'">
       <span *ngIf="!submitting">
         <i class="fas fa-check mr-1"></i>Confirm Payment
       </span>

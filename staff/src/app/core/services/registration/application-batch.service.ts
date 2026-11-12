@@ -32,6 +32,8 @@ export interface ApplicationListFilters {
   letterType?: string;
   /** Boarder | Day Scholar */
   residence?: string;
+  /** none | submitted | rejected — the latest payment proof (unpaid list) */
+  proofStatus?: string;
   /** pending | submitted | unlocked (uniform measurements list) */
   measurement?: string;
 }
@@ -83,6 +85,7 @@ export class ApplicationBatchService {
     if (filters.paid) params = params.set('paid', filters.paid);
     if (filters.programmeMatch) params = params.set('programme_match', filters.programmeMatch);
     if (filters.daysRemaining) params = params.set('days_remaining', filters.daysRemaining);
+    if (filters.proofStatus) params = params.set('proof_status', filters.proofStatus);
 
     return this.http.get<ApplicationBatchListResponse>(`${this.apiUrl}/application-batches`, { params });
   }

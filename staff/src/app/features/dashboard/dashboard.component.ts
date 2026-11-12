@@ -263,7 +263,7 @@ export class DashboardComponent implements OnInit {
       { label: 'Applications Submitted', value: n(a?.total), icon: 'fas fa-file-alt', color: 'info',
         subtext: c ? `${c.applicants.not_yet_applied} applicant(s) not yet applied` : loading },
       { label: 'Unpaid Applications', value: n(a?.unpaid), icon: 'fas fa-hourglass-half', color: 'warning', link: '/unpaid-applications',
-        subtext: c ? 'Awaiting application fee' : loading },
+        subtext: a ? `${a.proofs_awaiting} payment proof(s) to verify` : loading },
       { label: 'Paid Applications', value: n(a?.paid), icon: 'fas fa-check-circle', color: 'success', link: '/paid-applications',
         subtext: a ? `+${a.paid_today} paid today` : loading },
       { label: 'Fees Collected', value: c ? 'KES ' + n(c.fees.total) : '—', icon: 'fas fa-money-bill-wave', color: 'teal',

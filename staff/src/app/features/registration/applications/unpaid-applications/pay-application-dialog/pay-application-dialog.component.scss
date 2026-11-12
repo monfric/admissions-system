@@ -183,3 +183,25 @@
   &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
+
+// Payment proof
+.proof-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f9fafb;
+}
+.proof-title { font-weight: 700; font-size: .88rem; color: #374151; margin-bottom: 6px; }
+.proof-meta { font-size: .82rem; color: #4b5563; margin-bottom: 8px; }
+.proof-image-wrap { font-size: .82rem; color: #6b7280; padding: 12px 0; }
+.proof-image {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: zoom-in;
+  object-fit: contain;
+  background: #fff;
+}
+.proof-image-large { max-height: 70vh; cursor: zoom-out; }
