@@ -171,3 +171,28 @@
   .file-row { flex-wrap: wrap; }
   .file-actions { width: 100%; justify-content: flex-end; }
 }
+
+// Payment proof
+.proof-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+
+  > i { font-size: 1.2rem; margin-top: 2px; }
+}
+.proof-submitted { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.proof-rejected { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.proof-status-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: .86rem; }
+.proof-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.proof-form { display: flex; flex-direction: column; gap: 12px; }
+.proof-field label { display: block; font-size: .82rem; font-weight: 600; color: #374151; margin-bottom: 4px; }
+.proof-hint { display: block; font-size: .76rem; color: #6b7280; margin-top: 3px; }
+.proof-preview { max-width: 220px; max-height: 220px; border-radius: 6px; border: 1px solid #e5e7eb; object-fit: contain; }
+
+@media (max-width: 575.98px) {
+  .proof-status { flex-wrap: wrap; }
+  .proof-status .proof-actions { width: 100%; }
+}

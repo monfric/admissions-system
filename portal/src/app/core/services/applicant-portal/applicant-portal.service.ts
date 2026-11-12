@@ -80,6 +80,19 @@ export class ApplicantPortalService {
     return this.http.get<ApplicantApiResponse<PortalApplication>>(`${this.apiUrl}/applications/${id}`);
   }
 
+  /** Uploads (or replaces) the proof of the fee payment: a JPG/PNG of up to 2 MB and its transaction code. */
+  uploadPaymentProof(applicationId: number, file: File, transactionCode: string): Observable<ApplicantApiResponse<PortalApplication>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('transaction_code', transactionCode);
+    return this.http.post<ApplicantApiResponse<PortalApplication>>(`${this.apiUrl}/applications/${applicationId}/payment-proof`, formData);
+  }
+
+  /** Authenticated URL of the application's latest payment proof image, with a cache-buster. */
+  paymentProofUrl(applicationId: number): string {
+    return `${this.apiUrl}/applications/${applicationId}/payment-proof/file?t=${Date.now()}`;
+  }
+
   /** Authenticated URL of an application's letter PDF, with a cache-buster. */
   letterUrl(applicationId: number, type: string): string {
     return `${this.apiUrl}/applications/${applicationId}/letters/${type}?t=${Date.now()}`;

@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
@@ -21,17 +22,28 @@ import { DocumentViewerDialogComponent } from '../../../../shared/components/doc
 @Component({
   selector: 'app-application-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatDialogModule],
   templateUrl: './application-detail.component.html',
   styleUrls: ['../../shared/portal-ui.scss', './application-detail.component.scss']
 })
-export class ApplicationDetailComponent implements OnInit {
+export class ApplicationDetailComponent implements OnInit, OnDestroy {
   application: PortalApplication | null = null;
   loading = true;
   errorMessage = '';
   copied = false;
   /** Key of the file currently downloading, e.g. "letter:provisional" or "doc:12". */
   downloading: string | null = null;
+
+  // Payment proof form
+  proofCode = '';
+  proofFile: File | null = null;
+  /** Local preview of the chosen image (object URL). */
+  proofPreview: string | null = null;
+  proofError = '';
+  uploadingProof = false;
+  /** True while replacing a proof that's still awaiting verification. */
+  replacingProof = false;
+  readonly proofMaxBytes = 2 * 1024 * 1024;
 
   readonly decisionDisplay = decisionDisplay;
   readonly applicationStatus = applicationStatus;
@@ -62,6 +74,93 @@ export class ApplicationDetailComponent implements OnInit {
         this.errorMessage = err.error?.message || 'Application not found.';
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearProofFile();
+  }
+
+  /** The upload form shows until a proof is waiting (or after staff reject one). */
+  showProofForm(app: PortalApplication): boolean {
+    return !app.payment_proof || app.payment_proof.status === 'rejected' || this.replacingProof;
+  }
+
+  onProofFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.clearProofFile();
+    this.proofError = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      this.proofError = 'Please choose a JPG or PNG image (a photo or screenshot of your payment message).';
+      input.value = '';
+      return;
+    }
+    if (file.size > this.proofMaxBytes) {
+      this.proofError = 'The image is larger than 2 MB. Try a screenshot instead of a photo.';
+      input.value = '';
+      return;
+    }
+    this.proofFile = file;
+    this.proofPreview = URL.createObjectURL(file);
+  }
+
+  uploadProof(app: PortalApplication): void {
+    const code = this.proofCode.trim();
+    if (!code) {
+      this.proofError = 'Enter the transaction code from your payment message.';
+      return;
+    }
+    if (!this.proofFile) {
+      this.proofError = 'Choose the photo or screenshot of your payment.';
+      return;
+    }
+    this.uploadingProof = true;
+    this.proofError = '';
+    this.portalService.uploadPaymentProof(app.id, this.proofFile, code).subscribe({
+      next: res => {
+        this.uploadingProof = false;
+        this.application = res.data;
+        this.replacingProof = false;
+        this.proofCode = '';
+        this.clearProofFile();
+        this.toast.showSuccess('Proof uploaded', res.message);
+      },
+      error: err => {
+        this.uploadingProof = false;
+        this.proofError = err.error?.message || 'Upload failed. Please try again.';
+      }
+    });
+  }
+
+  viewProof(app: PortalApplication): void {
+    this.matDialog.open(DocumentViewerDialogComponent, {
+      width: '90vw', maxWidth: '900px', height: '90vh',
+      data: {
+        fileUrl: this.portalService.paymentProofUrl(app.id),
+        fileType: 'image',
+        title: 'Payment Proof',
+        fileName: `Payment-Proof-${app.application_number}`
+      }
+    });
+  }
+
+  startReplaceProof(): void {
+    this.replacingProof = true;
+    this.proofError = '';
+  }
+
+  cancelReplaceProof(): void {
+    this.replacingProof = false;
+    this.proofError = '';
+    this.proofCode = '';
+    this.clearProofFile();
+  }
+
+  private clearProofFile(): void {
+    if (this.proofPreview) URL.revokeObjectURL(this.proofPreview);
+    this.proofPreview = null;
+    this.proofFile = null;
   }
 
   /** The programme the applicant was selected for, once notified or approved. */

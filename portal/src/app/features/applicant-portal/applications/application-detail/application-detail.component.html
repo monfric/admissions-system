@@ -39,8 +39,9 @@
             <i class="fas fa-money-bill-wave"></i>
             <div class="banner-text">
               <span class="banner-title">Awaiting payment of your application fee</span>
-              Your application fee of <b>KES {{ app.application_fee | number:'1.2-2' }}</b> hasn't been received yet.
-              Your application will be reviewed once the fee is paid.
+              Pay the application fee of <b>KES {{ app.application_fee | number:'1.2-2' }}</b>, quoting application number
+              <b>{{ app.application_number }}</b>, then upload proof of the payment below. Your application is reviewed once
+              the admissions office has confirmed it.
             </div>
           </div>
           <div class="portal-banner banner-warning" *ngSwitchCase="'pending'">
@@ -83,6 +84,67 @@
             </div>
           </div>
         </ng-container>
+
+        <!-- Payment proof (while unpaid) -->
+        <div class="portal-card" *ngIf="app.payment_status === 'unpaid'">
+          <div class="portal-card-head">
+            <div class="head-icon"><i class="fas fa-receipt"></i></div>
+            <div class="head-text">
+              <h3 class="portal-card-title">Payment Proof</h3>
+              <p class="portal-card-subtitle">A photo or screenshot of your payment message, so the admissions office can confirm it.</p>
+            </div>
+          </div>
+          <div class="portal-card-body">
+
+            <!-- Waiting for staff -->
+            <div class="proof-status proof-submitted" *ngIf="app.payment_proof?.status === 'submitted' && !replacingProof">
+              <i class="fas fa-hourglass-half"></i>
+              <div class="proof-status-text">
+                <strong>Proof submitted, awaiting verification</strong>
+                <span>Transaction code <b>{{ app.payment_proof!.transaction_code }}</b> &middot; uploaded {{ app.payment_proof!.uploaded_at | date:'d MMM y, h:mm a' }}
+                  <ng-container *ngIf="app.payment_proof!.uploaded_by_staff"> by the admissions office</ng-container></span>
+              </div>
+              <div class="proof-actions">
+                <button type="button" class="btn-portal-outline btn-sm-portal" (click)="viewProof(app)"><i class="fas fa-eye"></i>View</button>
+                <button type="button" class="btn-portal-outline btn-sm-portal" (click)="startReplaceProof()"><i class="fas fa-redo"></i>Replace</button>
+              </div>
+            </div>
+
+            <!-- Turned down by staff -->
+            <div class="proof-status proof-rejected" *ngIf="app.payment_proof?.status === 'rejected'">
+              <i class="fas fa-exclamation-circle"></i>
+              <div class="proof-status-text">
+                <strong>Your proof could not be accepted</strong>
+                <span>{{ app.payment_proof!.rejection_reason }}</span>
+                <span>Please upload a new one below.</span>
+              </div>
+            </div>
+
+            <!-- Upload form -->
+            <form *ngIf="showProofForm(app)" class="proof-form" (ngSubmit)="uploadProof(app)">
+              <div class="proof-field">
+                <label for="proofCode">Transaction code <span class="text-danger">*</span></label>
+                <input id="proofCode" name="proofCode" type="text" class="form-control" [(ngModel)]="proofCode"
+                       placeholder="e.g. QK12ABC3DE" maxlength="30" autocomplete="off" [disabled]="uploadingProof">
+                <small class="proof-hint">The code at the start of your M-Pesa message (or the bank reference).</small>
+              </div>
+              <div class="proof-field">
+                <label for="proofFile">Photo or screenshot <span class="text-danger">*</span></label>
+                <input id="proofFile" type="file" class="form-control" accept="image/jpeg,image/png"
+                       (change)="onProofFileSelected($event)" [disabled]="uploadingProof">
+                <small class="proof-hint">JPG or PNG, up to 2 MB.</small>
+              </div>
+              <img *ngIf="proofPreview" [src]="proofPreview" class="proof-preview" alt="Selected payment proof">
+              <div class="error-banner" *ngIf="proofError"><i class="fas fa-exclamation-triangle"></i>{{ proofError }}</div>
+              <div class="proof-actions">
+                <button type="button" class="btn-portal-outline" *ngIf="replacingProof" (click)="cancelReplaceProof()" [disabled]="uploadingProof">Cancel</button>
+                <button type="submit" class="btn-portal" [disabled]="uploadingProof">
+                  <i class="fas" [ngClass]="uploadingProof ? 'fa-spinner fa-spin' : 'fa-upload'"></i>{{ uploadingProof ? 'Uploading…' : 'Upload Proof' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
 
         <!-- Admission -->
         <div class="admission-card" *ngIf="app.admission as adm">

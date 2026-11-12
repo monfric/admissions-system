@@ -89,7 +89,21 @@ export interface PortalApplication {
   /** Set once admitted: pending (form not submitted) | submitted | unlocked (reopened by staff). */
   uniform_status?: 'pending' | 'submitted' | 'unlocked' | string;
   programmes: PortalProgrammeChoice[];
+  /** The latest payment proof the applicant (or staff) uploaded, if any. */
+  payment_proof?: PortalPaymentProof;
   created_at: string;
+}
+
+/** Proof of the application-fee payment, checked by staff before they record the payment. */
+export interface PortalPaymentProof {
+  /** submitted (awaiting staff) | accepted | rejected | replaced */
+  status: 'submitted' | 'accepted' | 'rejected' | string;
+  transaction_code: string;
+  /** Why staff turned it down (status rejected). */
+  rejection_reason: string;
+  uploaded_by_staff: boolean;
+  uploaded_at: string;
+  reviewed_at: string;
 }
 
 /** How each decision status is shown to applicants. */
