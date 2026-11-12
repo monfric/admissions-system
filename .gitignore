@@ -1,0 +1,4 @@
+deploy/out/
+node_modules/
+dist/
+.angular/
