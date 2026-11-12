@@ -1,0 +1,6 @@
+app/config.php
+storage/uploads/*
+storage/ratelimit/*
+storage/fonts/unifont/*
+storage/logs/
+!storage/**/.gitkeep

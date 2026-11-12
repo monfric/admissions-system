@@ -1,0 +1,2 @@
+# Never served to the web, even if this folder ends up inside public_html.
+Require all denied
