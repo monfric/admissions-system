@@ -64,7 +64,7 @@ Then cPanel → **phpMyAdmin**:
 
 4. Click the new database on the left.
 5. **Import** tab → *Choose File* → `nmtc-database.sql` → **Import** (bottom of the page).
-6. You should see 17 tables (`admissions` … `users`).
+6. You should see 22 tables (`admissions` … `users`).
 
 ## 3. Create the three subdomains
 
