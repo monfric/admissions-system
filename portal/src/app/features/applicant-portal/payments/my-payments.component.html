@@ -36,16 +36,17 @@
                   <th>Payment Method</th>
                   <th>Payment Amount</th>
                   <th>Paid At</th>
+                  <th style="width: 120px">Receipt</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngIf="loading">
-                  <td colspan="7" class="text-center py-4">
+                  <td colspan="8" class="text-center py-4">
                     <i class="fas fa-spinner fa-spin mr-1"></i> Loading your payments&hellip;
                   </td>
                 </tr>
                 <tr *ngIf="!loading && !errorMessage && payments.length === 0">
-                  <td colspan="7" class="text-center py-4 text-muted">No payments recorded yet.</td>
+                  <td colspan="8" class="text-center py-4 text-muted">No payments recorded yet.</td>
                 </tr>
                 <tr *ngFor="let p of payments; let i = index">
                   <td>{{ i + 1 }}</td>
@@ -55,6 +56,11 @@
                   <td>{{ p.payment_method || '—' }}</td>
                   <td>KES {{ p.amount | number:'1.2-2' }}</td>
                   <td>{{ p.paid_at ? (p.paid_at | date:'d MMM y, h:mm a') : '—' }}</td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="downloadReceipt(p)" [disabled]="downloading === p.id">
+                      <i class="fas" [ngClass]="downloading === p.id ? 'fa-spinner fa-spin' : 'fa-download'"></i> PDF
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>

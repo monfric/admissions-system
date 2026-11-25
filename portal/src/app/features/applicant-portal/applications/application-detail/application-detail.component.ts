@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { EMPTY, Subscription, timer } from 'rxjs';
+import { catchError, switchMap, take } from 'rxjs/operators';
 
 import {
   PortalApplication,
   PortalDocument,
   PortalLetter,
+  PortalMpesaPayment,
   applicationStatus,
   countdownDisplay,
   decisionDisplay,
@@ -45,6 +48,21 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   replacingProof = false;
   readonly proofMaxBytes = 2 * 1024 * 1024;
 
+  // Pay with M-Pesa
+  mpesaPhone = '';
+  /** The attempt on screen (the latest one). */
+  mpesa: PortalMpesaPayment | null = null;
+  mpesaError = '';
+  startingMpesa = false;
+  /** Polling stopped while M-Pesa still had no answer: offer "Check again". */
+  mpesaStillWaiting = false;
+  /** Shown after a successful payment, with its receipt. */
+  paidWithMpesa: PortalMpesaPayment | null = null;
+  private mpesaPoll?: Subscription;
+  /** Check every 4 seconds, for up to 3 minutes. */
+  private readonly pollEveryMs = 4000;
+  private readonly pollTimes = 45;
+
   readonly decisionDisplay = decisionDisplay;
   readonly applicationStatus = applicationStatus;
   readonly programmeStatus = programmeStatus;
@@ -59,7 +77,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadApplication(Number(this.route.snapshot.paramMap.get('id')));
+  }
+
+  ngOnDestroy(): void {
+    this.clearProofFile();
+    this.stopMpesaPoll();
+  }
+
+  private loadApplication(id: number): void {
     this.portalService.getApplication(id).subscribe({
       next: res => {
         this.loading = false;
@@ -68,6 +94,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           return;
         }
         this.application = res.data;
+        this.initMpesa(res.data);
       },
       error: err => {
         this.loading = false;
@@ -76,8 +103,105 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.clearProofFile();
+  // ── Pay with M-Pesa ────────────────────────────────────────────────────────
+
+  private initMpesa(app: PortalApplication): void {
+    if (!app.mpesa) {
+      this.mpesa = null;
+      return;
+    }
+    if (!this.mpesaPhone) {
+      this.mpesaPhone = app.mpesa.phone;
+    }
+    this.mpesa = app.mpesa.latest;
+    if (this.mpesa && !this.mpesa.is_final) {
+      this.pollMpesa(app.id);
+    }
+  }
+
+  /** True when an M-Pesa prompt is waiting for the PIN. */
+  get mpesaWaiting(): boolean {
+    return !!this.mpesa && !this.mpesa.is_final;
+  }
+
+  payWithMpesa(app: PortalApplication): void {
+    const phone = this.mpesaPhone.replace(/[\s-]/g, '');
+    if (!/^(?:\+?254|0)?[17]\d{8}$/.test(phone)) {
+      this.mpesaError = 'Enter a Safaricom M-Pesa number, e.g. 0712345678.';
+      return;
+    }
+    this.mpesaError = '';
+    this.startingMpesa = true;
+    this.portalService.startMpesaPayment(app.id, phone).subscribe({
+      next: res => {
+        this.startingMpesa = false;
+        this.mpesa = res.data;
+        this.handleMpesaUpdate(app);
+      },
+      error: err => {
+        this.startingMpesa = false;
+        this.mpesaError = err.error?.message || 'The payment request could not be sent. Please try again.';
+      }
+    });
+  }
+
+  /** After polling gave up: ask once more, and keep watching if it's still waiting. */
+  checkMpesaAgain(app: PortalApplication): void {
+    if (!this.mpesa) return;
+    this.mpesaStillWaiting = false;
+    this.portalService.getMpesaPayment(app.id, this.mpesa.id).subscribe({
+      next: res => {
+        this.mpesa = res.data;
+        this.handleMpesaUpdate(app);
+      },
+      error: () => this.mpesaStillWaiting = true
+    });
+  }
+
+  private pollMpesa(appId: number): void {
+    this.stopMpesaPoll();
+    this.mpesaStillWaiting = false;
+    const mpesaId = this.mpesa!.id;
+    this.mpesaPoll = timer(this.pollEveryMs, this.pollEveryMs).pipe(
+      take(this.pollTimes),
+      // A failed check (e.g. network blip) is skipped; the next one tries again.
+      switchMap(() => this.portalService.getMpesaPayment(appId, mpesaId).pipe(catchError(() => EMPTY)))
+    ).subscribe({
+      next: res => {
+        this.mpesa = res.data;
+        if (res.data.is_final && this.application) {
+          this.handleMpesaUpdate(this.application);
+        }
+      },
+      complete: () => {
+        if (this.mpesaWaiting) {
+          this.mpesaStillWaiting = true;
+        }
+      }
+    });
+  }
+
+  private handleMpesaUpdate(app: PortalApplication): void {
+    if (!this.mpesa) return;
+    if (!this.mpesa.is_final) {
+      this.pollMpesa(app.id);
+      return;
+    }
+    this.stopMpesaPoll();
+    if (this.mpesa.status === 'success') {
+      this.paidWithMpesa = this.mpesa;
+      this.toast.showSuccess('Payment received', 'Thank you. Your M-Pesa payment has been received.');
+      this.loadApplication(app.id); // payment status, balance, banner
+    }
+  }
+
+  private stopMpesaPoll(): void {
+    this.mpesaPoll?.unsubscribe();
+    this.mpesaPoll = undefined;
+  }
+
+  downloadReceipt(paymentId: number, app: PortalApplication): void {
+    this.download('receipt:' + paymentId, this.portalService.receiptUrl(paymentId), `Receipt-${app.application_number}.pdf`);
   }
 
   /** The upload form shows until a proof is waiting (or after staff reject one). */

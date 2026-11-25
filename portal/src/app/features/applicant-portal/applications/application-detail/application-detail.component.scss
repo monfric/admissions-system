@@ -185,6 +185,14 @@
 }
 .proof-submitted { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
 .proof-rejected { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+// Pay with M-Pesa
+.mpesa-waiting { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+.mpesa-partial { background: #f0f9ff; border: 1px solid #bae6fd; color: #075985; margin-bottom: 12px; }
+.mpesa-paid { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; margin: 0; }
+.mpesa-icon { background: #dcfce7 !important; color: #15803d !important; }
+.mpesa-phone { max-width: 260px; }
+.btn-mpesa { background: #16a34a; border-color: #16a34a; }
+.btn-mpesa:hover:not(:disabled) { background: #15803d; border-color: #15803d; }
 .proof-status-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: .86rem; }
 .proof-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .proof-form { display: flex; flex-direction: column; gap: 12px; }

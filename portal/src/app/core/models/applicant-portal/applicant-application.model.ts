@@ -91,6 +91,40 @@ export interface PortalApplication {
   programmes: PortalProgrammeChoice[];
   /** The latest payment proof the applicant (or staff) uploaded, if any. */
   payment_proof?: PortalPaymentProof;
+  /** Paying with M-Pesa (only while unpaid). */
+  mpesa?: PortalMpesaInfo;
+  created_at: string;
+}
+
+/** What an unpaid application's page needs to offer "Pay with M-Pesa". */
+export interface PortalMpesaInfo {
+  /** False when the payment service is switched off: only payment proofs then. */
+  enabled: boolean;
+  /** Already paid towards the fee (e.g. an earlier, smaller M-Pesa payment). */
+  amount_paid: number;
+  /** What's still to pay, in whole shillings. */
+  amount_due: number;
+  /** The applicant's profile phone, to prefill. */
+  phone: string;
+  /** The latest M-Pesa attempt, if any. */
+  latest: PortalMpesaPayment | null;
+}
+
+/** One M-Pesa (STK Push) attempt. */
+export interface PortalMpesaPayment {
+  id: number;
+  /** starting | pending (waiting for the PIN) | success | failed | cancelled | timeout | expired | error */
+  status: string;
+  is_final: boolean;
+  /** Plain-language status for the applicant. */
+  message: string;
+  phone: string;
+  amount: number;
+  paid_amount: number | null;
+  mpesa_receipt: string | null;
+  paid_at: string | null;
+  /** The recorded payment (for its receipt), once paid. */
+  payment_id: number | null;
   created_at: string;
 }
 

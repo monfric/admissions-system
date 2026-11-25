@@ -8,6 +8,7 @@ import {
   ApplyIntakeOption,
   ApplyRequest,
   PortalApplication,
+  PortalMpesaPayment,
   PortalPayment,
   PortalUniformForm,
   SubmitUniformRequest
@@ -86,6 +87,21 @@ export class ApplicantPortalService {
     formData.append('file', file);
     formData.append('transaction_code', transactionCode);
     return this.http.post<ApplicantApiResponse<PortalApplication>>(`${this.apiUrl}/applications/${applicationId}/payment-proof`, formData);
+  }
+
+  /** Sends the M-Pesa payment prompt (STK Push) for the fee, or the balance still due, to a phone. */
+  startMpesaPayment(applicationId: number, phone: string): Observable<ApplicantApiResponse<PortalMpesaPayment>> {
+    return this.http.post<ApplicantApiResponse<PortalMpesaPayment>>(`${this.apiUrl}/applications/${applicationId}/mpesa`, { phone });
+  }
+
+  /** The latest state of an M-Pesa attempt (the API checks with M-Pesa while it's waiting). */
+  getMpesaPayment(applicationId: number, mpesaId: number): Observable<ApplicantApiResponse<PortalMpesaPayment>> {
+    return this.http.get<ApplicantApiResponse<PortalMpesaPayment>>(`${this.apiUrl}/applications/${applicationId}/mpesa/${mpesaId}`);
+  }
+
+  /** Authenticated URL of a payment's PDF receipt. */
+  receiptUrl(paymentId: number): string {
+    return `${this.apiUrl}/payments/${paymentId}/receipt?t=${Date.now()}`;
   }
 
   /** Authenticated URL of the application's latest payment proof image, with a cache-buster. */
