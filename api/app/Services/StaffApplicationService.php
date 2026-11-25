@@ -212,19 +212,23 @@ final class StaffApplicationService
         $id = Database::transaction(function () use ($batchId, $tier, $req, $now, $staffUserId) {
             $proofs = new PaymentProofService();
             $proof = $proofs->requireSubmitted($batchId);
+            // Only the balance: part of the fee may already have come in by M-Pesa.
+            $alreadyPaid = (float) Database::value('SELECT COALESCE(SUM(amount), 0) FROM payments WHERE application_batch_id = ? AND deleted_at IS NULL', [$batchId]);
+            $amount = max(0.0, (float) $tier['application_fee'] - $alreadyPaid);
             $id = Database::insert('payments', [
                 'application_batch_id' => $batchId,
-                'amount'               => (float) $tier['application_fee'],
+                'amount'               => $amount,
                 'payment_method'       => trim($req['payment_method']),
                 'transaction_code'     => trim($req['transaction_code']),
                 'paid_at'              => $now,
             ]);
             Database::update('application_batches', $batchId, ['payment_status' => 'paid']);
             $proofs->accept((int) $proof['id'], $staffUserId);
-            return $id;
+            return [$id, $amount];
         });
+        [$id, $amount] = $id;
         return [
-            'id' => $id, 'application_batch_id' => $batchId, 'amount' => Format::float($tier['application_fee']),
+            'id' => $id, 'application_batch_id' => $batchId, 'amount' => Format::float($amount),
             'payment_method' => trim($req['payment_method']), 'transaction_code' => trim($req['transaction_code']),
             'paid_at' => $now, 'created_at' => $now,
         ];

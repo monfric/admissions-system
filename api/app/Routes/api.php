@@ -16,6 +16,7 @@ use App\Handlers\EmailLogHandler;
 use App\Handlers\HealthHandler;
 use App\Handlers\IntakeHandler;
 use App\Handlers\LetterDocumentHandler;
+use App\Handlers\MpesaHandler;
 use App\Handlers\PasswordResetHandler;
 use App\Handlers\StaffApplicationHandler;
 use App\Handlers\StaffAuthHandler;
@@ -23,6 +24,9 @@ use App\Handlers\UserHandler;
 
 return function (Router $r): void {
     $r->get('/health', [HealthHandler::class, 'health']);
+
+    // Payment results from the central Payment Gateway (signed; see PaymentGateway::verifyWebhook).
+    $r->post('/payments/gateway-webhook', [MpesaHandler::class, 'webhook'], [RateLimiter::middleware(240, 60)]);
 
     // ── Staff app ────────────────────────────────────────────────────────────
     $r->group('/auth', [], function (Router $r) {
@@ -112,6 +116,12 @@ return function (Router $r): void {
         $r->post('/application-batches/:id/payment-proof', [StaffApplicationHandler::class, 'uploadProof']);
         $r->get('/application-batches/:id/payment-proof/file', [StaffApplicationHandler::class, 'proofFile']);
         $r->post('/application-batches/:id/payment-proof/reject', [StaffApplicationHandler::class, 'rejectProof']);
+
+        // M-Pesa payments (through the Payment Gateway) and receipts
+        $r->get('/mpesa-payments', [MpesaHandler::class, 'list']);
+        $r->get('/mpesa-payments/stats', [MpesaHandler::class, 'stats']);
+        $r->post('/mpesa-payments/:id/review', [MpesaHandler::class, 'review']);
+        $r->get('/payments/:id/receipt', [MpesaHandler::class, 'staffReceipt']);
         $r->post('/application-batches/:id/notify', [StaffApplicationHandler::class, 'notify']);
         $r->post('/application-batches/:id/decision', [StaffApplicationHandler::class, 'decide']);
 
@@ -172,6 +182,9 @@ return function (Router $r): void {
             $r->get('/applications/:id/documents/:documentId', [ApplicantPortalApplicationHandler::class, 'document']);
             $r->post('/applications/:id/payment-proof', [ApplicantPortalApplicationHandler::class, 'uploadPaymentProof']);
             $r->get('/applications/:id/payment-proof/file', [ApplicantPortalApplicationHandler::class, 'paymentProofFile']);
+            $r->post('/applications/:id/mpesa', [MpesaHandler::class, 'start'], [RateLimiter::middleware(10, 15 * 60)]);
+            $r->get('/applications/:id/mpesa/:mpesaId', [MpesaHandler::class, 'status']);
+            $r->get('/payments/:id/receipt', [MpesaHandler::class, 'portalReceipt']);
             // Admitted applicants fill in their uniform measurements to unlock their documents.
             $r->get('/applications/:id/uniform', [ApplicantPortalApplicationHandler::class, 'uniformForm']);
             $r->put('/applications/:id/uniform', [ApplicantPortalApplicationHandler::class, 'submitUniform']);

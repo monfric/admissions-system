@@ -271,6 +271,7 @@ CREATE TABLE payments (
   amount               DECIMAL(14,2) NOT NULL,
   payment_method       VARCHAR(50)  NOT NULL DEFAULT '',
   transaction_code     VARCHAR(100) NOT NULL DEFAULT '',
+  gateway_transaction_id VARCHAR(40) NULL,                -- set for M-Pesa payments via the Payment Gateway
   paid_at              DATETIME NULL,
   created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -278,6 +279,7 @@ CREATE TABLE payments (
   PRIMARY KEY (id),
   KEY idx_payments_batch (application_batch_id),
   KEY idx_payments_transaction_code (transaction_code),
+  UNIQUE KEY uq_payments_gateway_txn (gateway_transaction_id),
   KEY idx_payments_deleted_at (deleted_at),
   CONSTRAINT fk_payments_batch FOREIGN KEY (application_batch_id) REFERENCES application_batches (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -472,3 +474,44 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- Password: ChangeMe@2026 (bcrypt). Change it after the first login.
 INSERT INTO users (email, password, first_name, last_name, role, is_active)
 VALUES ('admin@nmtc.ac.ke', '$2y$10$USxf3z4uICLCNtokDQZFfeENaePziB7v1hLI9./UfS0Iha5/Gn9uG', 'System', 'Administrator', 'admin', 1);
+
+-- ─── M-Pesa (Payment Gateway) ─────────────────────────────────────────────────
+-- One STK Push attempt for an application's fee, mirrored from the gateway.
+CREATE TABLE IF NOT EXISTS mpesa_payments (
+  id                   INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  application_batch_id INT UNSIGNED  NOT NULL,
+  gateway_id           VARCHAR(40)   NULL,                      -- the gateway's "txn_…" (NULL until it answered)
+  idempotency_key      VARCHAR(64)   NOT NULL,
+  phone                VARCHAR(15)   NOT NULL,                  -- 2547XXXXXXXX
+  amount               DECIMAL(14,2) NOT NULL,                  -- requested
+  status               VARCHAR(20)   NOT NULL DEFAULT 'starting', -- starting, pending, success, failed, cancelled, timeout, expired, error
+  message              VARCHAR(255)  NOT NULL DEFAULT '',
+  mpesa_receipt        VARCHAR(20)   NULL,
+  paid_amount          DECIMAL(14,2) NULL,
+  paid_at              DATETIME      NULL,
+  flags                VARCHAR(255)  NOT NULL DEFAULT '',       -- from the gateway, plus "underpaid"
+  payment_id           INT UNSIGNED  NULL,                      -- the payments row it created
+  initiated_by         INT UNSIGNED  NULL,                      -- staff user id; NULL = the applicant
+  reviewed_by          INT UNSIGNED  NULL,                      -- staff who checked a flagged payment
+  reviewed_at          DATETIME      NULL,
+  last_synced_at       DATETIME      NULL,
+  created_at           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_mpesa_payments_gateway (gateway_id),
+  UNIQUE KEY uq_mpesa_payments_idempotency (idempotency_key),
+  KEY idx_mpesa_payments_batch (application_batch_id),
+  KEY idx_mpesa_payments_status (status),
+  CONSTRAINT fk_mpesa_payments_batch FOREIGN KEY (application_batch_id) REFERENCES application_batches (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Gateway webhook deliveries already handled (a repeated delivery is ignored).
+CREATE TABLE IF NOT EXISTS gateway_webhook_events (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  delivery_id VARCHAR(40)  NOT NULL,
+  event       VARCHAR(40)  NOT NULL,
+  gateway_id  VARCHAR(40)  NOT NULL DEFAULT '',
+  created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_gateway_webhook_events_delivery (delivery_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

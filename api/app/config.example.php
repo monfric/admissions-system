@@ -67,6 +67,18 @@ return [
     'portal_url' => 'https://apply.pamojaci.org',
     'staff_url'  => 'https://staff.pamojaci.org',
 
+    // M-Pesa (STK Push) through the central Payment Gateway. The gateway admin
+    // creates this system as a client (php bin/client.php create …, with the
+    // webhook https://api.example.org/api/v1/payments/gateway-webhook) and
+    // gives you its client id and secret. enabled false hides "Pay with M-Pesa".
+    'payment_gateway' => [
+        'enabled'         => false,
+        'base_url'        => 'https://pay.pamojaci.org/api/v1',
+        'client_id'       => '',
+        'client_secret'   => '',
+        'timeout_seconds' => 20,
+    ],
+
     // Uploaded files, rate-limit counters and logs. Must be outside public_html.
     'storage_path' => __DIR__ . '/../storage',
 ];

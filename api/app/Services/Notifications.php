@@ -52,6 +52,25 @@ final class Notifications
         });
     }
 
+    /** A fee payment recorded automatically (M-Pesa through the Payment Gateway). */
+    public static function paymentReceived(int $paymentId): void
+    {
+        self::guard('payment_received', function () use ($paymentId) {
+            $p = Database::one('SELECT * FROM payments WHERE id = ?', [$paymentId]);
+            $b = self::batch((int) $p['application_batch_id']);
+            $fee = (float) Database::value(
+                'SELECT application_fee FROM intake_training_levels
+                  WHERE intake_id = ? AND training_level_id = ? AND deleted_at IS NULL ORDER BY id LIMIT 1',
+                [(int) $b['intake_id'], (int) $b['training_level_id']]
+            );
+            $paid = (float) Database::value('SELECT COALESCE(SUM(amount), 0) FROM payments WHERE application_batch_id = ? AND deleted_at IS NULL', [(int) $b['id']]);
+            EmailQueue::push($b['email'], self::name($b), 'payment_received', EmailTemplates::paymentReceived(
+                $b['first_name'], $b['application_number'], (float) $p['amount'], (string) $p['payment_method'],
+                (string) $p['transaction_code'], (string) ($p['paid_at'] ?: $p['created_at']), $paid + 0.001 >= $fee, max(0.0, $fee - $paid)
+            ), "payment_received:$paymentId");
+        });
+    }
+
     public static function notified(int $batchId): void
     {
         self::guard('notified', function () use ($batchId) {

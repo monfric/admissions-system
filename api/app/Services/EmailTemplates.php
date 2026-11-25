@@ -53,6 +53,22 @@ final class EmailTemplates
         return self::render("Application received: $number", $name, $paragraphs, 'View my application', self::portal('/applicant/login'));
     }
 
+    public static function paymentReceived(string $name, string $number, float $amount, string $method, string $code, string $paidAt, bool $fullyPaid, float $balance): array
+    {
+        $paragraphs = ['We have received your payment. Thank you.'];
+        $paragraphs[] = self::details([
+            'Application number' => $number,
+            'Amount'             => 'KES ' . number_format($amount, 2),
+            'Payment method'     => $method,
+            'Transaction code'   => $code !== '' ? $code : 'To be confirmed',
+            'Date'               => date('j M Y, g:i a', strtotime($paidAt)),
+        ]);
+        $paragraphs[] = $fullyPaid
+            ? 'Your application fee is now fully paid and your application will be reviewed by the admissions office. You can download your receipt from the Payments page of the portal.'
+            : 'This is less than the full application fee. Please pay the balance of <strong>KES ' . number_format($balance, 2) . '</strong> from your application page.';
+        return self::render("Payment received: $number", $name, $paragraphs, 'View my payments', self::portal('/applicant/payments'));
+    }
+
     public static function notified(string $name, string $number, string $programme, string $deadline): array
     {
         return self::render("Provisional offer: $programme", $name, [

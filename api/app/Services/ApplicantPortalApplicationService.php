@@ -353,6 +353,7 @@ final class ApplicantPortalApplicationService
         }
 
         $proofs = (new PaymentProofService())->latestFor($batchIds, false);
+        $mpesa = (new MpesaPaymentService())->portalInfo(array_values(array_filter($batches, fn ($b) => $b['payment_status'] !== 'paid')));
 
         $responses = [];
         foreach ($batches as $b) {
@@ -383,6 +384,9 @@ final class ApplicantPortalApplicationService
             ];
             if (isset($proofs[$id])) {
                 $response['payment_proof'] = $proofs[$id];
+            }
+            if (isset($mpesa[$id])) {
+                $response['mpesa'] = $mpesa[$id];
             }
             if ($b['notified_at']) {
                 $response['notified_at'] = Format::dateTime($b['notified_at']);

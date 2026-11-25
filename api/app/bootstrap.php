@@ -17,6 +17,9 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// mb_* functions for hosts without the mbstring extension (defines only what's missing).
+require_once __DIR__ . '/Lib/mbstring-polyfill.php';
+
 $configFile = __DIR__ . '/config.php';
 if (!is_file($configFile)) {
     http_response_code(500);

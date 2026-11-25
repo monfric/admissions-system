@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 // Sends queued emails (and retries failed ones), after queuing any offer
-// deadline reminders that are due (7 days left, last day).
+// deadline reminders that are due (7 days left, last day). Also re-checks
+// waiting M-Pesa payments with the Payment Gateway.
 //
 // cPanel → Cron Jobs → "Once Per Minute", command:
 //   /usr/local/bin/php /home/USERNAME/nmtc-api/cron/emails.php
@@ -11,6 +12,7 @@ declare(strict_types=1);
 
 use App\Core\Config;
 use App\Services\EmailQueue;
+use App\Services\MpesaPaymentService;
 use App\Services\Notifications;
 
 if (PHP_SAPI !== 'cli') {
@@ -33,6 +35,12 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
 }
 
 try {
+    // Safety net for M-Pesa: re-check payments whose gateway webhook hasn't arrived
+    // (this records them and queues their receipt emails, sent just below).
+    $synced = (new MpesaPaymentService())->syncStale();
+    if ($synced) {
+        $log("mpesa: re-checked $synced waiting payment(s) with the gateway");
+    }
     $reminders = Notifications::queueDeadlineReminders();
     [$sent, $failed] = (new EmailQueue())->sendDue();
     // Quiet minutes aren't logged, so cron.log stays readable.
