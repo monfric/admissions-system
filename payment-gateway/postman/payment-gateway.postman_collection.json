@@ -1,0 +1,1759 @@
+{
+  "info": {
+    "name": "Payment Gateway",
+    "description": "Tests for the central M-Pesa payment gateway. Select the 'Payment Gateway (local)' environment and fill in client_id, client_secret and callback_token first (see README).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Signs every gateway request (see README \"Signing requests\").",
+          "// Safaricom callbacks and /health are not signed.",
+          "const cryptoJs = require('crypto-js');",
+          "const url = pm.variables.replaceIn(pm.request.url.toString());",
+          "if (!url.includes('/callbacks/') && !/\\/health(\\?|$)/.test(url)) {",
+          "    const m = url.match(/^https?:\\/\\/[^\\/]+(\\/[^?#]*)?(?:\\?([^#]*))?/);",
+          "    let path = (m && m[1]) || '/';",
+          "    const query = (m && m[2]) || '';",
+          "    const at = path.indexOf('/api/v1');",
+          "    if (at >= 0) path = path.substring(at + 7);",
+          "    path = '/' + path.replace(/^\\/+|\\/+$/g, '');",
+          "    const body = (pm.request.body && pm.request.body.raw) ? pm.variables.replaceIn(pm.request.body.raw) : '';",
+          "    const ts = Math.floor(Date.now() / 1000).toString();",
+          "    const canonical = [ts, pm.request.method.toUpperCase(), path, query, cryptoJs.SHA256(body).toString()].join('\\n');",
+          "    const signature = cryptoJs.HmacSHA256(canonical, pm.variables.get('client_secret') || '').toString();",
+          "    pm.request.headers.upsert({ key: 'X-Client-Id', value: pm.variables.get('client_id') || '' });",
+          "    pm.request.headers.upsert({ key: 'X-Timestamp', value: ts });",
+          "    pm.request.headers.upsert({ key: 'X-Signature', value: signature });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "reference",
+      "value": ""
+    },
+    {
+      "key": "idem_key",
+      "value": ""
+    },
+    {
+      "key": "pay_phone",
+      "value": ""
+    },
+    {
+      "key": "receipt",
+      "value": ""
+    },
+    {
+      "key": "txn_id",
+      "value": ""
+    },
+    {
+      "key": "checkout_id",
+      "value": ""
+    },
+    {
+      "key": "paid_phone",
+      "value": ""
+    },
+    {
+      "key": "txn_date",
+      "value": ""
+    },
+    {
+      "key": "short_amount",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('gateway healthy', () => pm.expect(pm.response.json().success).to.be.true);",
+              "console.log('M-Pesa driver:', pm.response.json().data.mpesa);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Successful payment (+ duplicate protection)",
+      "description": "",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'TEST-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', '07' + Math.floor(10000000 + Math.random() * 89999999));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same request again (same Idempotency-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200, not a second prompt', () => pm.response.to.have.status(200));",
+                  "pm.test('same payment returned', () => pm.expect(pm.response.json().data.id).to.eql(pm.collectionVariables.get('txn_id')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "New prompt for the same reference (refused while one is waiting)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('returns the waiting payment', () => pm.expect(pm.response.json().data.id).to.eql(pm.collectionVariables.get('txn_id')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (waiting for PIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Safaricom callback: paid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/{{callback_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "{{callback_token}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 0,\n      \"ResultDesc\": \"The service request is processed successfully.\",\n      \"CallbackMetadata\": {\n        \"Item\": [\n          { \"Name\": \"Amount\", \"Value\": {{amount}} },\n          { \"Name\": \"MpesaReceiptNumber\", \"Value\": \"{{receipt}}\" },\n          { \"Name\": \"Balance\" },\n          { \"Name\": \"TransactionDate\", \"Value\": {{txn_date}} },\n          { \"Name\": \"PhoneNumber\", \"Value\": {{paid_phone}} }\n        ]\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date(Date.now() + 3 * 3600 * 1000); // Nairobi time, as M-Pesa sends it",
+                  "pm.collectionVariables.set('txn_date', now.toISOString().replace(/[-:T]/g, '').substring(0, 14));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Safaricom gets \"Accepted\"', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().ResultDesc).to.eql('Accepted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (paid)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is success', () => pm.expect(d.status).to.eql('success'));",
+                  "",
+                  "pm.test('receipt recorded', () => pm.expect(d.mpesa_receipt).to.eql(pm.collectionVariables.get('receipt')));",
+                  "pm.test('verified with M-Pesa', () => pm.expect(d.verified_by).to.eql('callback+query'));",
+                  "pm.test('no flags', () => pm.expect(d.flags).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same callback again (duplicate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/{{callback_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "{{callback_token}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 0,\n      \"ResultDesc\": \"The service request is processed successfully.\",\n      \"CallbackMetadata\": {\n        \"Item\": [\n          { \"Name\": \"Amount\", \"Value\": {{amount}} },\n          { \"Name\": \"MpesaReceiptNumber\", \"Value\": \"{{receipt}}\" },\n          { \"Name\": \"Balance\" },\n          { \"Name\": \"TransactionDate\", \"Value\": {{txn_date}} },\n          { \"Name\": \"PhoneNumber\", \"Value\": {{paid_phone}} }\n        ]\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date(Date.now() + 3 * 3600 * 1000); // Nairobi time, as M-Pesa sends it",
+                  "pm.collectionVariables.set('txn_date', now.toISOString().replace(/[-:T]/g, '').substring(0, 14));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Safaricom gets \"Accepted\"', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().ResultDesc).to.eql('Accepted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (unchanged)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is success', () => pm.expect(d.status).to.eql('success'));",
+                  "",
+                  "pm.test('still the same receipt', () => pm.expect(d.mpesa_receipt).to.eql(pm.collectionVariables.get('receipt')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "All payments for the reference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?reference={{reference}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "reference",
+                  "value": "{{reference}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('one payment for this reference', () => pm.expect(pm.response.json().data.length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Customer cancels the prompt",
+      "description": "",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'CANCEL-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', '07' + Math.floor(10000000 + Math.random() * 89999999));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Safaricom callback: cancelled (1032)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/{{callback_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "{{callback_token}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 1032,\n      \"ResultDesc\": \"Request cancelled by user\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date(Date.now() + 3 * 3600 * 1000); // Nairobi time, as M-Pesa sends it",
+                  "pm.collectionVariables.set('txn_date', now.toISOString().replace(/[-:T]/g, '').substring(0, 14));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Safaricom gets \"Accepted\"', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().ResultDesc).to.eql('Accepted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (cancelled)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is cancelled', () => pm.expect(d.status).to.eql('cancelled'));",
+                  "",
+                  "pm.test('result code 1032', () => pm.expect(d.result_code).to.eql(1032));",
+                  "console.log('Message for the applicant:', d.message);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "New Idempotency-Key",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pay again for the same reference (allowed now)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Paid a different amount (flagged for staff)",
+      "description": "",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'AMOUNT-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', '07' + Math.floor(10000000 + Math.random() * 89999999));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Safaricom callback: paid 1 shilling less",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/{{callback_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "{{callback_token}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 0,\n      \"ResultDesc\": \"The service request is processed successfully.\",\n      \"CallbackMetadata\": {\n        \"Item\": [\n          { \"Name\": \"Amount\", \"Value\": {{short_amount}} },\n          { \"Name\": \"MpesaReceiptNumber\", \"Value\": \"{{receipt}}\" },\n          { \"Name\": \"Balance\" },\n          { \"Name\": \"TransactionDate\", \"Value\": {{txn_date}} },\n          { \"Name\": \"PhoneNumber\", \"Value\": {{paid_phone}} }\n        ]\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date(Date.now() + 3 * 3600 * 1000); // Nairobi time, as M-Pesa sends it",
+                  "pm.collectionVariables.set('txn_date', now.toISOString().replace(/[-:T]/g, '').substring(0, 14));",
+                  "pm.collectionVariables.set('short_amount', Number(pm.variables.get('amount')) - 1);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Safaricom gets \"Accepted\"', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().ResultDesc).to.eql('Accepted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (paid, flagged amount_mismatch)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is success', () => pm.expect(d.status).to.eql('success'));",
+                  "",
+                  "pm.test('flagged amount_mismatch', () => pm.expect(d.flags).to.include('amount_mismatch'));",
+                  "pm.test('paid_amount is what M-Pesa reported', () => pm.expect(d.paid_amount).to.eql(Number(pm.collectionVariables.get('short_amount'))));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Security checks (all must be refused)",
+      "description": "",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'KEYTEST-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', '07' + Math.floor(10000000 + Math.random() * 89999999));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong signature",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.request.headers.upsert({ key: 'X-Signature', value: '0'.repeat(64) });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 refused', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Old timestamp (replayed request)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.request.headers.upsert({ key: 'X-Timestamp', value: String(Math.floor(Date.now() / 1000) - 3600) });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 refused', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Callback with the wrong token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/not-the-real-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "not-the-real-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 0,\n      \"ResultDesc\": \"The service request is processed successfully.\",\n      \"CallbackMetadata\": {\n        \"Item\": [\n          { \"Name\": \"Amount\", \"Value\": {{amount}} },\n          { \"Name\": \"MpesaReceiptNumber\", \"Value\": \"{{receipt}}\" },\n          { \"Name\": \"Balance\" },\n          { \"Name\": \"TransactionDate\", \"Value\": {{txn_date}} },\n          { \"Name\": \"PhoneNumber\", \"Value\": {{paid_phone}} }\n        ]\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 refused', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same Idempotency-Key, different amount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}}1,\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 refused', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Not a Safaricom number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"0812345\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 refused', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Amount with cents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10.50,\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 refused', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Missed callback (run by hand)",
+      "description": "Wait about 70 seconds between 'Start payment' and the next request.",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'MISSED-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', '07' + Math.floor(10000000 + Math.random() * 89999999));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount}},\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status after waiting 1 minute (no callback)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            },
+            "description": "Wait about 70 seconds after 'Start payment' (mock: mpesa.mock.auto_complete_seconds), then send. The gateway asks M-Pesa itself and finds the payment without any callback. `php cron/reconcile.php` does the same for every waiting payment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is success', () => pm.expect(d.status).to.eql('success'));",
+                  "",
+                  "pm.test('found by status check only', () => pm.expect(d.verified_by).to.eql('query'));",
+                  "pm.test('receipt still to come', () => pm.expect(d.flags).to.include('receipt_pending'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "The late callback finally arrives",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/callbacks/mpesa/stk/{{callback_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "callbacks",
+                "mpesa",
+                "stk",
+                "{{callback_token}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Body\": {\n    \"stkCallback\": {\n      \"MerchantRequestID\": \"29115-34620561-1\",\n      \"CheckoutRequestID\": \"{{checkout_id}}\",\n      \"ResultCode\": 0,\n      \"ResultDesc\": \"The service request is processed successfully.\",\n      \"CallbackMetadata\": {\n        \"Item\": [\n          { \"Name\": \"Amount\", \"Value\": {{amount}} },\n          { \"Name\": \"MpesaReceiptNumber\", \"Value\": \"{{receipt}}\" },\n          { \"Name\": \"Balance\" },\n          { \"Name\": \"TransactionDate\", \"Value\": {{txn_date}} },\n          { \"Name\": \"PhoneNumber\", \"Value\": {{paid_phone}} }\n        ]\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const now = new Date(Date.now() + 3 * 3600 * 1000); // Nairobi time, as M-Pesa sends it",
+                  "pm.collectionVariables.set('txn_date', now.toISOString().replace(/[-:T]/g, '').substring(0, 14));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Safaricom gets \"Accepted\"', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().ResultDesc).to.eql('Accepted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (receipt filled in)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is success', () => pm.expect(d.status).to.eql('success'));",
+                  "",
+                  "pm.test('receipt recorded', () => pm.expect(d.mpesa_receipt).to.eql(pm.collectionVariables.get('receipt')));",
+                  "pm.test('receipt_pending cleared', () => pm.expect(d.flags).to.not.include('receipt_pending'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Sandbox: real prompt to your phone",
+      "description": "Only with the sandbox driver. Locally the real callback can't reach you; the status check settles the payment instead.",
+      "item": [
+        {
+          "name": "Prepare a new payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Sets a fresh reference, Idempotency-Key and phone for the next request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Runs as the test script of \"Prepare a new payment\": the collection signs each",
+                  "// request BEFORE that request's own pre-request script runs, so the values must",
+                  "// be ready one step earlier.",
+                  "// A fresh payment: new reference, new Idempotency-Key.",
+                  "pm.collectionVariables.set('reference', 'SANDBOX-' + Date.now());",
+                  "pm.collectionVariables.set('idem_key', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('pay_phone', pm.variables.get('my_phone'));",
+                  "pm.collectionVariables.set('receipt', 'TST' + Math.random().toString(36).substring(2, 9).toUpperCase());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start payment to my phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idem_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/stk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "stk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1,\n  \"phone\": \"{{pay_phone}}\",\n  \"reference\": \"{{reference}}\",\n  \"description\": \"Application fee\",\n  \"metadata\": { \"note\": \"Postman test\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Needs mpesa.driver = 'sandbox' and your Daraja keys in app/config.php, and my_phone in the environment. Your phone shows an M-Pesa prompt for KES 1 (sandbox: no real money)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prompt sent (201)', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('status is pending', () => pm.expect(d.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('txn_id', d.id);",
+                  "pm.collectionVariables.set('checkout_id', d.checkout_request_id);",
+                  "pm.collectionVariables.set('paid_phone', d.phone);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status (send again after entering the PIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{txn_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{txn_id}}"
+              ]
+            },
+            "description": "Enter your PIN (or press Cancel) on the phone, wait about 30 seconds, then send. The gateway asks Safaricom directly, so this works locally without a callback."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "console.log('Status:', d.status, '-', d.message);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
