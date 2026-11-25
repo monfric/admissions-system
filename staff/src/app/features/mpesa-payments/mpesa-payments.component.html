@@ -1,0 +1,168 @@
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h4 class="m-0">M-Pesa Payments</h4>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+            <li class="breadcrumb-item active">M-Pesa Payments</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <div class="alert alert-warning" *ngIf="stats && !stats.enabled">
+        <i class="fas fa-info-circle mr-1"></i>
+        M-Pesa payments are <strong>switched off</strong>: applicants only see the payment proof upload.
+        They are turned on in the API's <code>app/config.php</code> (<code>payment_gateway</code>).
+      </div>
+
+      <!-- Statistics -->
+      <div class="row mb-1">
+        <div class="col-lg-3 col-md-6 col-sm-6" *ngFor="let card of statCards">
+          <div class="small-box" [ngClass]="'bg-' + card.color">
+            <div class="inner">
+              <h3 style="font-size:1.4rem;">{{ card.value }}</h3>
+              <p style="font-size:.85rem;">{{ card.label }}</p>
+              <small class="stat-subtext">{{ card.subtext }}</small>
+            </div>
+            <div class="icon"><i [class]="card.icon"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Payments made with M-Pesa</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-default btn-sm" (click)="refresh()" [disabled]="loading">
+              <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Successful M-Pesa payments are recorded on the application automatically. Payments with a
+            <span class="badge badge-warning">flag</span> were still recorded but need a look, e.g. a different amount was paid.
+            Mark them as checked once you've dealt with them.
+          </p>
+
+          <!-- Search and Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search by name, application no., receipt or phone..."
+                       [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+                <div class="input-group-append">
+                  <button class="btn btn-default" type="button" (click)="onSearch()" aria-label="Search"><i class="fas fa-search"></i></button>
+                  <button class="btn btn-default" type="button" (click)="clearSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-7 d-flex flex-wrap justify-content-md-end align-items-center mt-2 mt-md-0">
+              <div class="btn-group btn-group-sm mr-3 mb-1 flex-wrap">
+                <button type="button" class="btn" [ngClass]="view === '' ? 'btn-primary' : 'btn-default'" (click)="setView('')">All</button>
+                <button type="button" class="btn" [ngClass]="view === 'needs_review' ? 'btn-primary' : 'btn-default'" (click)="setView('needs_review')">
+                  Needs checking <span class="badge badge-warning ml-1" *ngIf="stats?.needs_review">{{ stats?.needs_review }}</span>
+                </button>
+                <button type="button" class="btn" [ngClass]="view === 'success' ? 'btn-primary' : 'btn-default'" (click)="setView('success')">Paid</button>
+                <button type="button" class="btn" [ngClass]="view === 'waiting' ? 'btn-primary' : 'btn-default'" (click)="setView('waiting')">Waiting</button>
+                <button type="button" class="btn" [ngClass]="view === 'unsuccessful' ? 'btn-primary' : 'btn-default'" (click)="setView('unsuccessful')">Not completed</button>
+              </div>
+              <label class="text-muted small mb-0 mr-2">Per page:</label>
+              <select class="form-control form-control-sm" style="width: auto;" [(ngModel)]="pageSize" (ngModelChange)="changePageSize($event)">
+                <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Date</th>
+                  <th>Applicant</th>
+                  <th>Phone</th>
+                  <th class="text-right">Amount</th>
+                  <th>M-Pesa Receipt</th>
+                  <th style="width: 220px">Status</th>
+                  <th style="width: 150px" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="8" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Loading payments&hellip;</td>
+                </tr>
+                <tr *ngIf="!loading && payments.length === 0">
+                  <td colspan="8" class="text-center py-4 text-muted">No M-Pesa payments found.</td>
+                </tr>
+                <tr *ngFor="let p of payments; let i = index" [class.row-flagged]="p.needs_review">
+                  <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                  <td class="text-nowrap">{{ (p.paid_at || p.created_at) | date:'MMM d, y, h:mm a' }}</td>
+                  <td>
+                    {{ p.applicant_name }}<br>
+                    <small class="text-muted">App. {{ p.application_number }} &middot;
+                      <span [class.text-success]="p.batch_payment_status === 'paid'">{{ p.batch_payment_status === 'paid' ? 'Fee paid' : 'Fee unpaid' }}</span></small>
+                  </td>
+                  <td class="text-nowrap">{{ p.phone }}</td>
+                  <td class="text-right text-nowrap">
+                    KES {{ (p.paid_amount ?? p.amount) | number:'1.0-2' }}
+                    <small class="d-block text-muted" *ngIf="p.paid_amount !== null && p.paid_amount !== p.amount">asked {{ p.amount | number:'1.0-2' }}</small>
+                  </td>
+                  <td class="text-nowrap"><code *ngIf="p.mpesa_receipt">{{ p.mpesa_receipt }}</code><span *ngIf="!p.mpesa_receipt" class="text-muted">—</span></td>
+                  <td>
+                    <span class="badge" [ngClass]="{
+                      'badge-success': p.status === 'success',
+                      'badge-info': !p.is_final,
+                      'badge-secondary': p.is_final && p.status !== 'success'
+                    }">{{ statusLabel(p.status) }}</span>
+                    <small class="d-block text-muted" *ngIf="p.is_final && p.status !== 'success' && p.message">{{ p.message }}</small>
+                    <div *ngFor="let f of p.flags" class="flag-line" [class.text-muted]="!p.needs_review">
+                      <i class="fas fa-flag" [class.text-warning]="p.needs_review"></i> {{ flagLabel(f) }}
+                    </div>
+                    <small class="d-block text-muted" *ngIf="p.reviewed_at">
+                      <i class="fas fa-check"></i> Checked by {{ p.reviewed_by_name || 'staff' }}, {{ p.reviewed_at | date:'MMM d, h:mm a' }}
+                    </small>
+                  </td>
+                  <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-sm btn-outline-primary mr-1" *ngIf="p.payment_id"
+                            (click)="downloadReceipt(p)" [disabled]="downloadingId === p.id" title="Download receipt (PDF)">
+                      <i class="fas" [ngClass]="downloadingId === p.id ? 'fa-spinner fa-spin' : 'fa-receipt'"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning" *ngIf="p.needs_review"
+                            (click)="markReviewed(p)" [disabled]="reviewingId === p.id" title="I've checked this payment">
+                      <i class="fas" [ngClass]="reviewingId === p.id ? 'fa-spinner fa-spin' : 'fa-check'"></i> Checked
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <app-pagination
+            *ngIf="!loading && payments.length > 0"
+            [currentPage]="page"
+            [pageSize]="pageSize"
+            [totalItems]="totalItems"
+            [totalPages]="totalPages"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>

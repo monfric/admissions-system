@@ -15,6 +15,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   applicant_welcome: 'Welcome (applicant)',
   profile_submitted: 'Profile submitted',
   application_submitted: 'Application received',
+  payment_received: 'Payment received',
   notified: 'Provisional offer',
   deadline_reminder: 'Offer deadline reminder',
   recalled: 'Offer expired',

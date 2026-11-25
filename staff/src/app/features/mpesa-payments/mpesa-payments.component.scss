@@ -1,0 +1,18 @@
+// Card subtext (same as the other pages' stat cards).
+.stat-subtext {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  opacity: .95;
+}
+
+// Payments that still need a staff check stand out.
+.row-flagged td {
+  background: #fffbeb !important;
+}
+
+.flag-line {
+  font-size: .8rem;
+  margin-top: 3px;
+  line-height: 1.3;
+}

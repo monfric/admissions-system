@@ -19,6 +19,7 @@ export const routes: Routes = [
       // Applications
       page('new-applicants', () => import('./features/registration/applications/new-applicants/new-applicants.component').then(m => m.NewApplicantsComponent)),
       page('unpaid-applications', () => import('./features/registration/applications/unpaid-applications/unpaid-applications.component').then(m => m.UnpaidApplicationsComponent)),
+      page('mpesa-payments', () => import('./features/mpesa-payments/mpesa-payments.component').then(m => m.MpesaPaymentsComponent)),
       page('paid-applications', () => import('./features/registration/applications/paid-applications/paid-applications.component').then(m => m.PaidApplicationsComponent)),
       page('notified-applications', () => import('./features/registration/applications/notified-applications/notified-applications.component').then(m => m.NotifiedApplicationsComponent)),
       page('approved-applications', () => import('./features/registration/applications/approved-applications/approved-applications.component').then(m => m.ApprovedApplicationsComponent)),
