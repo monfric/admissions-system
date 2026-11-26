@@ -81,14 +81,6 @@ export class ApplicantPortalService {
     return this.http.get<ApplicantApiResponse<PortalApplication>>(`${this.apiUrl}/applications/${id}`);
   }
 
-  /** Uploads (or replaces) the proof of the fee payment: a JPG/PNG of up to 2 MB and its transaction code. */
-  uploadPaymentProof(applicationId: number, file: File, transactionCode: string): Observable<ApplicantApiResponse<PortalApplication>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('transaction_code', transactionCode);
-    return this.http.post<ApplicantApiResponse<PortalApplication>>(`${this.apiUrl}/applications/${applicationId}/payment-proof`, formData);
-  }
-
   /** Sends the M-Pesa payment prompt (STK Push) for the fee, or the balance still due, to a phone. */
   startMpesaPayment(applicationId: number, phone: string): Observable<ApplicantApiResponse<PortalMpesaPayment>> {
     return this.http.post<ApplicantApiResponse<PortalMpesaPayment>>(`${this.apiUrl}/applications/${applicationId}/mpesa`, { phone });
@@ -102,11 +94,6 @@ export class ApplicantPortalService {
   /** Authenticated URL of a payment's PDF receipt. */
   receiptUrl(paymentId: number): string {
     return `${this.apiUrl}/payments/${paymentId}/receipt?t=${Date.now()}`;
-  }
-
-  /** Authenticated URL of the application's latest payment proof image, with a cache-buster. */
-  paymentProofUrl(applicationId: number): string {
-    return `${this.apiUrl}/applications/${applicationId}/payment-proof/file?t=${Date.now()}`;
   }
 
   /** Authenticated URL of an application's letter PDF, with a cache-buster. */

@@ -39,15 +39,14 @@
             <i class="fas fa-money-bill-wave"></i>
             <div class="banner-text">
               <span class="banner-title">Awaiting payment of your application fee</span>
-              <ng-container *ngIf="app.mpesa?.enabled; else proofOnly">
+              <ng-container *ngIf="app.mpesa?.enabled; else payLater">
                 Pay the application fee of <b>KES {{ app.application_fee | number:'1.2-2' }}</b> with M-Pesa below: you'll get
-                a prompt on your phone. Paid another way? Upload proof of the payment instead. Your application is reviewed once
-                the fee has been received.
+                a prompt on your phone. Your application is reviewed once the fee has been received.
               </ng-container>
-              <ng-template #proofOnly>
-                Pay the application fee of <b>KES {{ app.application_fee | number:'1.2-2' }}</b>, quoting application number
-                <b>{{ app.application_number }}</b>, then upload proof of the payment below. Your application is reviewed once
-                the admissions office has confirmed it.
+              <ng-template #payLater>
+                The application fee is <b>KES {{ app.application_fee | number:'1.2-2' }}</b>. Online payment is not available
+                at the moment: please try again later or contact the admissions office, quoting application number
+                <b>{{ app.application_number }}</b>.
               </ng-template>
             </div>
           </div>
@@ -95,14 +94,14 @@
         <!-- Just paid with M-Pesa -->
         <div class="portal-card" *ngIf="paidWithMpesa as paid">
           <div class="portal-card-body">
-            <div class="proof-status mpesa-paid">
+            <div class="pay-status mpesa-paid">
               <i class="fas fa-check-circle"></i>
-              <div class="proof-status-text">
+              <div class="pay-status-text">
                 <strong>Payment received: KES {{ (paid.paid_amount ?? paid.amount) | number:'1.2-2' }}</strong>
                 <span *ngIf="paid.mpesa_receipt">M-Pesa receipt <b>{{ paid.mpesa_receipt }}</b></span>
                 <span *ngIf="!paid.mpesa_receipt">Your M-Pesa receipt number will appear here shortly.</span>
               </div>
-              <div class="proof-actions" *ngIf="paid.payment_id">
+              <div class="pay-actions" *ngIf="paid.payment_id">
                 <button type="button" class="btn-portal btn-sm-portal" (click)="downloadReceipt(paid.payment_id, app)"
                         [disabled]="downloading === 'receipt:' + paid.payment_id">
                   <i class="fas" [ngClass]="downloading === 'receipt:' + paid.payment_id ? 'fa-spinner fa-spin' : 'fa-download'"></i>Receipt
@@ -124,112 +123,50 @@
           <div class="portal-card-body">
 
             <!-- Part of the fee already paid -->
-            <div class="proof-status mpesa-partial" *ngIf="m.amount_paid > 0">
+            <div class="pay-status mpesa-partial" *ngIf="m.amount_paid > 0">
               <i class="fas fa-info-circle"></i>
-              <div class="proof-status-text">
+              <div class="pay-status-text">
                 <strong>KES {{ m.amount_paid | number:'1.2-2' }} received so far</strong>
                 <span>Balance to pay: <b>KES {{ m.amount_due | number:'1.2-2' }}</b></span>
               </div>
             </div>
 
             <!-- Waiting for the PIN -->
-            <div class="proof-status mpesa-waiting" *ngIf="mpesaWaiting">
+            <div class="pay-status mpesa-waiting" *ngIf="mpesaWaiting">
               <i class="fas fa-spinner fa-spin"></i>
-              <div class="proof-status-text">
+              <div class="pay-status-text">
                 <strong>Check your phone</strong>
                 <span>A prompt for <b>KES {{ mpesa!.amount | number:'1.0-0' }}</b> was sent to <b>{{ mpesa!.phone }}</b>.
                   Enter your M-Pesa PIN to complete the payment. This page updates by itself.</span>
                 <span *ngIf="mpesaStillWaiting">Still waiting for M-Pesa. If you've already entered your PIN, check again in a moment.</span>
               </div>
-              <div class="proof-actions" *ngIf="mpesaStillWaiting">
+              <div class="pay-actions" *ngIf="mpesaStillWaiting">
                 <button type="button" class="btn-portal-outline btn-sm-portal" (click)="checkMpesaAgain(app)"><i class="fas fa-sync-alt"></i>Check again</button>
               </div>
             </div>
 
             <!-- Last attempt didn't go through -->
-            <div class="proof-status proof-rejected" *ngIf="mpesa && mpesa.is_final && mpesa.status !== 'success'">
+            <div class="pay-status pay-failed" *ngIf="mpesa && mpesa.is_final && mpesa.status !== 'success'">
               <i class="fas fa-exclamation-circle"></i>
-              <div class="proof-status-text">
+              <div class="pay-status-text">
                 <strong>Payment not completed</strong>
                 <span>{{ mpesa.message }}</span>
                 <span>You can try again below.</span>
               </div>
             </div>
 
-            <form *ngIf="!mpesaWaiting" class="proof-form" (ngSubmit)="payWithMpesa(app)">
-              <div class="proof-field">
+            <form *ngIf="!mpesaWaiting" class="pay-form" (ngSubmit)="payWithMpesa(app)">
+              <div class="pay-field">
                 <label for="mpesaPhone">M-Pesa phone number <span class="text-danger">*</span></label>
                 <input id="mpesaPhone" name="mpesaPhone" type="tel" class="form-control mpesa-phone" [(ngModel)]="mpesaPhone"
                        placeholder="e.g. 0712345678" maxlength="15" autocomplete="tel" [disabled]="startingMpesa">
-                <small class="proof-hint">The prompt goes to this phone. It can be a different number from the one on your profile.</small>
+                <small class="pay-hint">The prompt goes to this phone. It can be a different number from the one on your profile.</small>
               </div>
               <div class="error-banner" *ngIf="mpesaError"><i class="fas fa-exclamation-triangle"></i>{{ mpesaError }}</div>
-              <div class="proof-actions">
+              <div class="pay-actions">
                 <button type="submit" class="btn-portal btn-mpesa" [disabled]="startingMpesa">
                   <i class="fas" [ngClass]="startingMpesa ? 'fa-spinner fa-spin' : 'fa-mobile-alt'"></i>
                   {{ startingMpesa ? 'Sending prompt…' : 'Pay KES ' + (m.amount_due | number:'1.0-0') }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Payment proof (while unpaid) -->
-        <div class="portal-card" *ngIf="app.payment_status === 'unpaid'">
-          <div class="portal-card-head">
-            <div class="head-icon"><i class="fas fa-receipt"></i></div>
-            <div class="head-text">
-              <h3 class="portal-card-title">Payment Proof</h3>
-              <p class="portal-card-subtitle" *ngIf="!app.mpesa?.enabled">A photo or screenshot of your payment message, so the admissions office can confirm it.</p>
-              <p class="portal-card-subtitle" *ngIf="app.mpesa?.enabled">Paid another way (bank, or Paybill directly)? Upload a photo or screenshot of the payment so the admissions office can confirm it.</p>
-            </div>
-          </div>
-          <div class="portal-card-body">
-
-            <!-- Waiting for staff -->
-            <div class="proof-status proof-submitted" *ngIf="app.payment_proof?.status === 'submitted' && !replacingProof">
-              <i class="fas fa-hourglass-half"></i>
-              <div class="proof-status-text">
-                <strong>Proof submitted, awaiting verification</strong>
-                <span>Transaction code <b>{{ app.payment_proof!.transaction_code }}</b> &middot; uploaded {{ app.payment_proof!.uploaded_at | date:'d MMM y, h:mm a' }}
-                  <ng-container *ngIf="app.payment_proof!.uploaded_by_staff"> by the admissions office</ng-container></span>
-              </div>
-              <div class="proof-actions">
-                <button type="button" class="btn-portal-outline btn-sm-portal" (click)="viewProof(app)"><i class="fas fa-eye"></i>View</button>
-                <button type="button" class="btn-portal-outline btn-sm-portal" (click)="startReplaceProof()"><i class="fas fa-redo"></i>Replace</button>
-              </div>
-            </div>
-
-            <!-- Turned down by staff -->
-            <div class="proof-status proof-rejected" *ngIf="app.payment_proof?.status === 'rejected'">
-              <i class="fas fa-exclamation-circle"></i>
-              <div class="proof-status-text">
-                <strong>Your proof could not be accepted</strong>
-                <span>{{ app.payment_proof!.rejection_reason }}</span>
-                <span>Please upload a new one below.</span>
-              </div>
-            </div>
-
-            <!-- Upload form -->
-            <form *ngIf="showProofForm(app)" class="proof-form" (ngSubmit)="uploadProof(app)">
-              <div class="proof-field">
-                <label for="proofCode">Transaction code <span class="text-danger">*</span></label>
-                <input id="proofCode" name="proofCode" type="text" class="form-control" [(ngModel)]="proofCode"
-                       placeholder="e.g. QK12ABC3DE" maxlength="30" autocomplete="off" [disabled]="uploadingProof">
-                <small class="proof-hint">The code at the start of your M-Pesa message (or the bank reference).</small>
-              </div>
-              <div class="proof-field">
-                <label for="proofFile">Photo or screenshot <span class="text-danger">*</span></label>
-                <input id="proofFile" type="file" class="form-control" accept="image/jpeg,image/png"
-                       (change)="onProofFileSelected($event)" [disabled]="uploadingProof">
-                <small class="proof-hint">JPG or PNG, up to 2 MB.</small>
-              </div>
-              <img *ngIf="proofPreview" [src]="proofPreview" class="proof-preview" alt="Selected payment proof">
-              <div class="error-banner" *ngIf="proofError"><i class="fas fa-exclamation-triangle"></i>{{ proofError }}</div>
-              <div class="proof-actions">
-                <button type="button" class="btn-portal-outline" *ngIf="replacingProof" (click)="cancelReplaceProof()" [disabled]="uploadingProof">Cancel</button>
-                <button type="submit" class="btn-portal" [disabled]="uploadingProof">
-                  <i class="fas" [ngClass]="uploadingProof ? 'fa-spinner fa-spin' : 'fa-upload'"></i>{{ uploadingProof ? 'Uploading…' : 'Upload Proof' }}
                 </button>
               </div>
             </form>

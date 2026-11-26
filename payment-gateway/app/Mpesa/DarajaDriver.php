@@ -79,11 +79,17 @@ final class DarajaDriver implements MpesaDriver
 
         $data = json_decode($response['body'], true);
         $data = is_array($data) ? $data : [];
+        // Never log secrets: the password, or the callback token inside the callback URL.
         $safe = $body;
         unset($safe['Password']);
+        if (isset($safe['CallBackURL'])) {
+            $safe['CallBackURL'] = preg_replace('#/stk/[^/]+$#', '/stk/[hidden]', (string) $safe['CallBackURL']);
+        }
         Log::write('daraja', "POST $path → HTTP {$response['status']}", ['request' => $safe, 'response' => $data ?: substr($response['body'], 0, 300)]);
 
-        if ($response['status'] === 401 && !$retried) {
+        // A rejected token (401, or Daraja's "404.001.03 Invalid Access Token"): get a fresh one and try once more.
+        $tokenRejected = $response['status'] === 401 || (string) ($data['errorCode'] ?? '') === '404.001.03';
+        if ($tokenRejected && !$retried) {
             $this->forgetToken();
             return $this->post($path, $body, true);
         }

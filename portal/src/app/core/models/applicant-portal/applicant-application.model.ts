@@ -89,8 +89,6 @@ export interface PortalApplication {
   /** Set once admitted: pending (form not submitted) | submitted | unlocked (reopened by staff). */
   uniform_status?: 'pending' | 'submitted' | 'unlocked' | string;
   programmes: PortalProgrammeChoice[];
-  /** The latest payment proof the applicant (or staff) uploaded, if any. */
-  payment_proof?: PortalPaymentProof;
   /** Paying with M-Pesa (only while unpaid). */
   mpesa?: PortalMpesaInfo;
   created_at: string;
@@ -98,7 +96,7 @@ export interface PortalApplication {
 
 /** What an unpaid application's page needs to offer "Pay with M-Pesa". */
 export interface PortalMpesaInfo {
-  /** False when the payment service is switched off: only payment proofs then. */
+  /** False when M-Pesa payments are switched off in the API settings. */
   enabled: boolean;
   /** Already paid towards the fee (e.g. an earlier, smaller M-Pesa payment). */
   amount_paid: number;
@@ -126,18 +124,6 @@ export interface PortalMpesaPayment {
   /** The recorded payment (for its receipt), once paid. */
   payment_id: number | null;
   created_at: string;
-}
-
-/** Proof of the application-fee payment, checked by staff before they record the payment. */
-export interface PortalPaymentProof {
-  /** submitted (awaiting staff) | accepted | rejected | replaced */
-  status: 'submitted' | 'accepted' | 'rejected' | string;
-  transaction_code: string;
-  /** Why staff turned it down (status rejected). */
-  rejection_reason: string;
-  uploaded_by_staff: boolean;
-  uploaded_at: string;
-  reviewed_at: string;
 }
 
 /** How each decision status is shown to applicants. */

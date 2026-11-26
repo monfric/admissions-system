@@ -91,16 +91,6 @@ final class StaffApplicationService
                 $params[] = $to;
             }
         }
-        if ($f['proof_status'] !== '') {
-            // The latest proof's status; "none" = no proof uploaded yet.
-            $latest = "(SELECT pp.status FROM payment_proofs pp WHERE pp.application_batch_id = ab.id AND pp.deleted_at IS NULL ORDER BY pp.id DESC LIMIT 1)";
-            if ($f['proof_status'] === 'none') {
-                $where[] = "$latest IS NULL";
-            } else {
-                $where[] = "$latest = ?";
-                $params[] = $f['proof_status'];
-            }
-        }
         if (($since = ApplicantService::periodSince($f['applied'])) !== null) {
             $where[] = 'ab.created_at >= ?';
             $params[] = $since;
@@ -192,8 +182,8 @@ final class StaffApplicationService
     }
 
     /**
-     * Records the application fee (amount always taken from the fee tier, never
-     * the client) against the applicant's submitted payment proof, which it accepts.
+     * Records a fee payment made outside M-Pesa prompts (bank, cash, …). The
+     * amount is always the balance of the fee tier, never taken from the client.
      */
     public function recordPayment(int $batchId, array $req, int $staffUserId): array
     {
@@ -209,9 +199,7 @@ final class StaffApplicationService
             throw HttpException::badRequest("no fee schedule found for this application's intake and training level");
         }
         $now = Database::now();
-        $id = Database::transaction(function () use ($batchId, $tier, $req, $now, $staffUserId) {
-            $proofs = new PaymentProofService();
-            $proof = $proofs->requireSubmitted($batchId);
+        [$id, $amount] = Database::transaction(function () use ($batchId, $tier, $req, $now) {
             // Only the balance: part of the fee may already have come in by M-Pesa.
             $alreadyPaid = (float) Database::value('SELECT COALESCE(SUM(amount), 0) FROM payments WHERE application_batch_id = ? AND deleted_at IS NULL', [$batchId]);
             $amount = max(0.0, (float) $tier['application_fee'] - $alreadyPaid);
@@ -223,10 +211,8 @@ final class StaffApplicationService
                 'paid_at'              => $now,
             ]);
             Database::update('application_batches', $batchId, ['payment_status' => 'paid']);
-            $proofs->accept((int) $proof['id'], $staffUserId);
             return [$id, $amount];
         });
-        [$id, $amount] = $id;
         return [
             'id' => $id, 'application_batch_id' => $batchId, 'amount' => Format::float($amount),
             'payment_method' => trim($req['payment_method']), 'transaction_code' => trim($req['transaction_code']),
@@ -430,9 +416,7 @@ final class StaffApplicationService
             $byApplicant[(int) $b['applicant_id']][] = $b;
         }
 
-        $proofs = (new PaymentProofService())->latestFor($batchIds, true);
-
-        return array_map(function (array $b) use ($appsByBatch, $fees, $byApplicant, $proofs) {
+        return array_map(function (array $b) use ($appsByBatch, $fees, $byApplicant) {
             $previous = [];
             foreach ($byApplicant[(int) $b['applicant_id']] ?? [] as $p) {
                 if ((int) $p['id'] !== (int) $b['id']) {
@@ -463,9 +447,6 @@ final class StaffApplicationService
                 'created_at'          => Format::dateTime($b['created_at']),
                 'updated_at'          => Format::dateTime($b['updated_at']),
             ];
-            if (isset($proofs[(int) $b['id']])) {
-                $response['payment_proof'] = $proofs[(int) $b['id']];
-            }
             // Fields Go leaves out when empty.
             if ($b['profile_photo'] !== '') {
                 $response['applicant_profile_photo'] = $b['profile_photo'];

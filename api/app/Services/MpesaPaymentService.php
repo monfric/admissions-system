@@ -33,7 +33,7 @@ final class MpesaPaymentService
     public function start(int $batchId, string $phoneInput, ?int $staffUserId): array
     {
         if (!PaymentGateway::enabled()) {
-            throw HttpException::badRequest('M-Pesa payments are not available at the moment. Please upload proof of payment instead.');
+            throw HttpException::badRequest('M-Pesa payments are not available at the moment. Please try again later or contact the admissions office.');
         }
         $phone = self::normalisePhone($phoneInput);
         if ($phone === null) {
@@ -79,7 +79,7 @@ final class MpesaPaymentService
         } catch (Throwable $e) {
             self::logError("start for batch $batchId: " . $e->getMessage());
             Database::update('mpesa_payments', $id, ['status' => 'error', 'message' => 'The payment service could not be reached']);
-            throw new HttpException(503, 'M-Pesa payments are not available right now. Please try again in a few minutes, or upload proof of payment.');
+            throw new HttpException(503, 'M-Pesa payments are not available right now. Please try again in a few minutes.');
         }
 
         $txn = $res['body']['data'] ?? null;

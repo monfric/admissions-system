@@ -67,14 +67,6 @@
             </div>
 
             <div class="col-md-6 d-flex flex-wrap justify-content-md-end align-items-center mt-2 mt-md-0">
-              <label class="text-muted small mb-0 mr-2" for="proofFilter">Proof:</label>
-              <select id="proofFilter" class="form-control form-control-sm mr-3" style="width: auto;"
-                      [ngModel]="proofFilter" (ngModelChange)="setProofFilter($event)">
-                <option value="">All</option>
-                <option value="submitted">Submitted (to verify)</option>
-                <option value="none">Not uploaded</option>
-                <option value="rejected">Rejected</option>
-              </select>
               <label class="text-muted small mb-0 mr-2">Per page:</label>
               <select
                 class="form-control form-control-sm"
@@ -105,18 +97,17 @@
                   <th>Residence</th>
                   <th>Course(s) Applied</th>
                   <th>Date Applied</th>
-                  <th style="width: 120px">Payment Proof</th>
                   <th style="width: 70px" class="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngIf="loading">
-                  <td colspan="12" class="text-center py-4">
+                  <td colspan="11" class="text-center py-4">
                     <i class="fas fa-spinner fa-spin mr-1"></i> Loading unpaid applications&hellip;
                   </td>
                 </tr>
                 <tr *ngIf="!loading && batches.length === 0">
-                  <td colspan="12" class="text-center py-4 text-muted">No unpaid applications found.</td>
+                  <td colspan="11" class="text-center py-4 text-muted">No unpaid applications found.</td>
                 </tr>
                 <tr *ngFor="let batch of batches; let i = index">
                   <td>{{ (page - 1) * pageSize + i + 1 }}</td>
@@ -137,15 +128,6 @@
                     </ul>
                   </td>
                   <td>{{ batch.created_at | date:'MMM d, y' }}</td>
-                  <td>
-                    <ng-container [ngSwitch]="batch.payment_proof?.status">
-                      <a *ngSwitchCase="'submitted'" href="javascript:void(0)" class="badge badge-info" (click)="payApplication(batch)"
-                         title="Open to verify the payment">Submitted &middot; verify</a>
-                      <span *ngSwitchCase="'rejected'" class="badge badge-danger" [title]="batch.payment_proof?.rejection_reason || ''">Rejected</span>
-                      <span *ngSwitchDefault class="badge badge-secondary">Not uploaded</span>
-                    </ng-container>
-                    <small class="d-block text-muted" *ngIf="batch.payment_proof?.status === 'submitted'">{{ batch.payment_proof!.transaction_code }}</small>
-                  </td>
                   <td class="text-center position-relative" (click)="$event.stopPropagation()">
                     <button class="btn btn-sm btn-tool" (click)="toggleMenu(batch.id, $event)">
                       <i class="fas fa-ellipsis-v"></i>
